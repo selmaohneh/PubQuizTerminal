@@ -1,4 +1,5 @@
 const { app, BrowserWindow } = require('electron');
+const { createMenu } = require('./menu');
 
 let mainWindow;
 
@@ -6,7 +7,6 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
-    autoHideMenuBar: true,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false
@@ -22,6 +22,9 @@ function createWindow() {
   mainWindow.on('closed', () => {
     mainWindow = null;
   });
+
+  // Create menu
+  createMenu(mainWindow);
 }
 
 app.whenReady().then(createWindow);
