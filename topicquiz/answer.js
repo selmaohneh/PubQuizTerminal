@@ -21,6 +21,15 @@ class AnswerController {
         document.addEventListener('keydown', (event) => {
             this.handleKeyNavigation(event);
         });
+        
+        // Listen for new quiz file loading
+        if (typeof require !== 'undefined') {
+            const { ipcRenderer } = require('electron');
+            ipcRenderer.on('show-quiz-page', () => {
+                console.log('New quiz file loaded - navigating to topic page');
+                window.location.href = 'topic.html';
+            });
+        }
     }
 
     handleKeyNavigation(event) {
@@ -42,11 +51,21 @@ class AnswerController {
             this.questionText.textContent = question;
             this.answerText.textContent = answer;
             this.topicName.textContent = topic;
+            
+            // Play correct sound when the answer is revealed
+            if (typeof soundManager !== 'undefined') {
+                soundManager.playCorrect();
+            }
         } else {
             // Fallback if no data is available
             this.questionText.textContent = "No question data available.";
             this.answerText.textContent = "No answer available.";
             this.topicName.textContent = "Unknown Topic";
+            
+            // Play error sound for missing data
+            if (typeof soundManager !== 'undefined') {
+                soundManager.playError();
+            }
         }
     }
 

@@ -21,6 +21,15 @@ class QuestionController {
         document.addEventListener('keydown', (event) => {
             this.handleKeyNavigation(event);
         });
+        
+        // Listen for new quiz file loading
+        if (typeof require !== 'undefined') {
+            const { ipcRenderer } = require('electron');
+            ipcRenderer.on('show-quiz-page', () => {
+                console.log('New quiz file loaded - navigating to topic page');
+                window.location.href = 'topic.html';
+            });
+        }
     }
 
     handleKeyNavigation(event) {
@@ -64,6 +73,11 @@ class QuestionController {
         localStorage.setItem('currentAnswer', topic.answer);
         localStorage.setItem('currentQuestion', topic.question);
         localStorage.setItem('currentTopic', topic.name);
+        
+        // Play ding sound when question is displayed
+        if (typeof soundManager !== 'undefined') {
+            soundManager.playDing();
+        }
     }
 
 

@@ -21,15 +21,24 @@ class TopicController {
         // Clear temporary quiz data
         this.clearQuizData();
         
-        // Check if this is a fresh app start (no session marker)
-        if (!sessionStorage.getItem('quizSessionActive')) {
-            // Fresh app start - clear played topics
+        // Try to load quiz data from temporary file first
+        this.loadQuizDataFromFile();
+        
+        // Check if this is a fresh app start or new quiz file loaded
+        const isNewFile = this.isNewQuizFile();
+        const isFirstStart = !sessionStorage.getItem('quizSessionActive');
+        
+        if (isFirstStart || isNewFile) {
+            // Fresh app start or new quiz file - clear played topics
+            console.log(isFirstStart ? 'Fresh app start - resetting topics' : 'New quiz file detected - resetting topics');
             localStorage.removeItem('playedTopics');
             sessionStorage.setItem('quizSessionActive', 'true');
+            
+            // Store current quiz data hash for future comparison
+            if (this.quizData) {
+                this.storeQuizDataHash();
+            }
         }
-        
-        // Try to load quiz data from temporary file
-        this.loadQuizDataFromFile();
         
         // Load any topics that were played in this session
         this.loadPlayedTopics();
@@ -73,6 +82,45 @@ class TopicController {
         }
         // If all topics are disabled, select first one anyway
         this.selectTopicByIndex(0);
+    }
+
+    isNewQuizFile() {
+        // Check if the current quiz data is different from the stored one
+        if (!this.quizData) {
+            return false;
+        }
+        
+        const currentHash = this.generateQuizDataHash(this.quizData);
+        const storedHash = localStorage.getItem('quizDataHash');
+        
+        return currentHash !== storedHash;
+    }
+
+    storeQuizDataHash() {
+        // Store a hash of the current quiz data for comparison
+        if (this.quizData) {
+            const hash = this.generateQuizDataHash(this.quizData);
+            localStorage.setItem('quizDataHash', hash);
+        }
+    }
+
+    generateQuizDataHash(quizData) {
+        // Generate a simple hash of the quiz data to detect changes
+        // We'll use the stringified data and create a simple hash
+        const dataString = JSON.stringify(quizData.map(topic => ({
+            name: topic.name,
+            question: topic.question,
+            answer: topic.answer
+        })));
+        
+        // Simple hash function (not cryptographically secure, but good enough for our use)
+        let hash = 0;
+        for (let i = 0; i < dataString.length; i++) {
+            const char = dataString.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash; // Convert to 32-bit integer
+        }
+        return hash.toString();
     }
 
     loadQuizData(quizData) {
@@ -134,6 +182,12 @@ class TopicController {
             ipcRenderer.on('load-quiz-data', (event, quizData) => {
                 console.log('Received quiz data via IPC:', quizData);
                 this.loadQuizData(quizData);
+            });
+            
+            // Listen for show-quiz-page to reload the topic page when new quiz is loaded
+            ipcRenderer.on('show-quiz-page', () => {
+                console.log('New quiz file loaded - reloading topic page');
+                window.location.reload(); // Reload current page to reset state
             });
         }
     }
@@ -247,7 +301,7 @@ class TopicController {
         localStorage.setItem('selectedTopicName', topicTitle);
         localStorage.setItem('questionIndex', '0');
         
-        // Navigate to question view
+        // Navigate to question view (sound will play when question loads)
         window.location.href = `question.html?topic=${topicId}&q=0`;
     }
 
