@@ -65,28 +65,21 @@ class AnswerController {
     }
 
     markTopicAsPlayed(topicName) {
-        // Get the topic ID from the topic name
-        const topicMap = {
-            'Geography': '1',
-            'History': '2',
-            'Science': '3',
-            'Sports': '4',
-            'Movies': '5',
-            'Music': '6',
-            'Literature': '7',
-            'Art': '8',
-            'Technology': '9',
-            'Food & Drink': '10',
-            'Nature': '11',
-            'Politics': '12',
-            'Fashion': '13',
-            'Travel': '14',
-            'Games': '15',
-            'Miscellaneous': '16'
-        };
+        // Get quiz data to find the topic index
+        const quizData = JSON.parse(localStorage.getItem('currentQuizData') || 'null');
         
-        const topicId = topicMap[topicName];
-        if (topicId) {
+        if (!quizData) {
+            console.error('No quiz data available to mark topic as played');
+            return;
+        }
+        
+        // Find the topic by name and get its index
+        const topicIndex = quizData.findIndex(t => t.name === topicName);
+        
+        if (topicIndex !== -1) {
+            // Convert index to 1-based ID for consistency
+            const topicId = (topicIndex + 1).toString();
+            
             // Get current played topics
             const playedTopics = JSON.parse(localStorage.getItem('playedTopics') || '[]');
             
@@ -95,6 +88,8 @@ class AnswerController {
                 playedTopics.push(topicId);
                 localStorage.setItem('playedTopics', JSON.stringify(playedTopics));
             }
+        } else {
+            console.error('Topic not found in quiz data:', topicName);
         }
     }
 }

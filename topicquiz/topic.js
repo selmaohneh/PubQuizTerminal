@@ -7,6 +7,7 @@
 
 class TopicController {
     constructor() {
+        this.quizData = null;
         this.initializeElements();
         this.bindEvents();
         this.initializeQuiz();
@@ -26,6 +27,9 @@ class TopicController {
             localStorage.removeItem('playedTopics');
             sessionStorage.setItem('quizSessionActive', 'true');
         }
+        
+        // Try to load quiz data from temporary file
+        this.loadQuizDataFromFile();
         
         // Load any topics that were played in this session
         this.loadPlayedTopics();
@@ -71,11 +75,67 @@ class TopicController {
         this.selectTopicByIndex(0);
     }
 
+    loadQuizData(quizData) {
+        this.quizData = quizData;
+        // Store quiz data in localStorage for other views to access
+        localStorage.setItem('currentQuizData', JSON.stringify(quizData));
+        
+        // Update topic names on the cards
+        this.updateTopicNames();
+        
+        console.log('Quiz data loaded:', quizData.length, 'topics');
+    }
+
+    loadQuizDataFromFile() {
+        // Try to load quiz data from temporary file
+        if (typeof require !== 'undefined') {
+            try {
+                const fs = require('fs');
+                const path = require('path');
+                const tempFilePath = path.join(__dirname, '..', 'temp-quiz-data.json');
+                
+                if (fs.existsSync(tempFilePath)) {
+                    const quizData = JSON.parse(fs.readFileSync(tempFilePath, 'utf8'));
+                    console.log('Loaded quiz data from temp file:', quizData.length, 'topics');
+                    this.loadQuizData(quizData);
+                }
+            } catch (error) {
+                console.error('Error loading quiz data from temp file:', error);
+            }
+        }
+    }
+
+    updateTopicNames() {
+        if (!this.quizData) return;
+        
+        // Update each topic card with the name from quiz data
+        this.quizData.forEach((topic, index) => {
+            const card = this.topicCards[index];
+            if (card) {
+                const titleElement = card.querySelector('.topic-title');
+                if (titleElement) {
+                    titleElement.textContent = topic.name;
+                }
+                // Update data-topic attribute to use index as ID
+                card.setAttribute('data-topic', (index + 1).toString());
+            }
+        });
+    }
+
     bindEvents() {
         // Handle keyboard navigation only (no mouse interactions)
         document.addEventListener('keydown', (event) => {
             this.handleKeyNavigation(event);
         });
+
+        // Listen for quiz data from main process
+        if (typeof require !== 'undefined') {
+            const { ipcRenderer } = require('electron');
+            ipcRenderer.on('load-quiz-data', (event, quizData) => {
+                console.log('Received quiz data via IPC:', quizData);
+                this.loadQuizData(quizData);
+            });
+        }
     }
 
     handleKeyNavigation(event) {
