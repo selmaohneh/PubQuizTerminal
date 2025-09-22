@@ -1,0 +1,139 @@
+/**
+ * Answer View Styles
+ * Shows topic, question, and answer with green highlighting
+ * Consistent with app design approach
+ */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+}
+
+.answer-container {
+    width: 100vw;
+    height: 100vh;
+    background-color: #000000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2vh;
+    margin: 0;
+    color: white;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.answer-content {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    max-width: 90vw;
+    max-height: 90vh;
+    gap: 3vh;
+}
+
+.topic-name {
+    font-size: clamp(1.5rem, 3vw, 3rem);
+    font-weight: 600;
+    color: #ffd700;
+    text-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+    padding: 1vh 2vh;
+    border: 2px solid #ffd700;
+    border-radius: 15px;
+    background: rgba(255, 215, 0, 0.1);
+}
+
+.question-text {
+    font-size: clamp(2rem, 4.5vw, 6rem);
+    font-weight: 700;
+    color: #ffffff;
+    line-height: 1.2;
+    text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+    word-wrap: break-word;
+    hyphens: auto;
+    width: 100%;
+}
+
+.answer-text {
+    font-size: clamp(2.5rem, 6vw, 8rem);
+    font-weight: 800;
+    color: #00ff00;
+    line-height: 1.2;
+    text-shadow: 0 0 25px rgba(0, 255, 0, 0.6);
+    word-wrap: break-word;
+    hyphens: auto;
+    width: 100%;
+    border: 3px solid #00ff00;
+    border-radius: 20px;
+    padding: 2vh;
+    background: rgba(0, 255, 0, 0.1);
+}
+
+/* Responsive design for different screen sizes */
+@media (max-width: 1200px) {
+    .question-text {
+        font-size: clamp(1.8rem, 4vw, 5rem);
+    }
+    
+    .answer-text {
+        font-size: clamp(2rem, 5vw, 6rem);
+    }
+    
+    .topic-name {
+        font-size: clamp(1.2rem, 2.5vw, 2.5rem);
+    }
+}
+
+@media (max-width: 768px) {
+    .question-text {
+        font-size: clamp(1.5rem, 3.5vw, 4rem);
+    }
+    
+    .answer-text {
+        font-size: clamp(1.8rem, 4vw, 5rem);
+    }
+    
+    .topic-name {
+        font-size: clamp(1rem, 2vw, 2rem);
+    }
+}
+
+@media (max-width: 480px) {
+    .question-text {
+        font-size: clamp(1.2rem, 3vw, 3.5rem);
+    }
+    
+    .answer-text {
+        font-size: clamp(1.5rem, 3.5vw, 4rem);
+    }
+    
+    .topic-name {
+        font-size: clamp(0.9rem, 1.8vw, 1.8rem);
+    }
+}
+
+/* For very wide screens */
+@media (min-width: 1920px) {
+    .question-text {
+        font-size: clamp(2.5rem, 5vw, 7rem);
+    }
+    
+    .answer-text {
+        font-size: clamp(3rem, 7vw, 10rem);
+    }
+    
+    .topic-name {
+        font-size: clamp(1.8rem, 3.5vw, 4rem);
+    }
+}

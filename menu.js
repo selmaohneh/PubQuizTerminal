@@ -51,7 +51,7 @@ class MenuController {
   }
 
   loadQuizPage() {
-    this.mainWindow.loadFile('topicquiz.html');
+    this.mainWindow.loadFile('topicquiz/topic.html');
   }
 
   loadMainPage() {

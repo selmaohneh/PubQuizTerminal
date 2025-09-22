@@ -1,10 +1,10 @@
 /**
- * Topic Quiz Navigation
+ * Topic Selection Navigation
  * Handles 4x4 grid navigation with arrow keys
  * Yellow highlighting for selected cards
  */
 
-class TopicQuizController {
+class TopicController {
     constructor() {
         this.initializeElements();
         this.bindEvents();
@@ -42,7 +42,6 @@ class TopicQuizController {
                 this.navigateRight();
                 break;
             case 'Enter':
-            case ' ':
                 event.preventDefault();
                 this.selectCurrentTopic();
                 break;
@@ -97,13 +96,23 @@ class TopicQuizController {
             const topicTitle = currentCard.querySelector('.topic-title').textContent;
             console.log('Selected topic:', topicId, '-', topicTitle);
             
-            // TODO: In the future, this could navigate to questions for this topic
-            // For now, just log the selection
+            // Navigate to question view for this topic
+            this.navigateToQuestion(topicId, topicTitle);
         }
+    }
+
+    navigateToQuestion(topicId, topicTitle) {
+        // Store topic info for the question view
+        localStorage.setItem('selectedTopic', topicId);
+        localStorage.setItem('selectedTopicName', topicTitle);
+        localStorage.setItem('questionIndex', '0');
+        
+        // Navigate to question view
+        window.location.href = `question.html?topic=${topicId}&q=0`;
     }
 }
 
-// Initialize topic quiz controller when DOM is loaded
+// Initialize topic controller when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    new TopicQuizController();
+    new TopicController();
 });
