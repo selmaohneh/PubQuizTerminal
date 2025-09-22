@@ -88,6 +88,33 @@ html, body {
     font-weight: 800;
 }
 
+.topic-card.disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.topic-card.disabled .topic-title {
+    color: #666666;
+    text-shadow: none;
+    font-weight: 500;
+}
+
+.topic-card.disabled:hover,
+.topic-card.disabled.selected {
+    background: transparent;
+    border-color: #666666;
+    box-shadow: none;
+    transform: none;
+}
+
+.topic-card.disabled:hover .topic-title,
+.topic-card.disabled.selected .topic-title {
+    color: #666666;
+    text-shadow: none;
+    font-weight: 500;
+}
+
 /* Responsive design for different screen sizes */
 @media (max-width: 1200px) {
     .topic-title {

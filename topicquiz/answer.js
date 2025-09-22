@@ -51,11 +51,51 @@ class AnswerController {
     }
 
     goBackToTopics() {
+        // Mark the current topic as played
+        const currentTopic = localStorage.getItem('currentTopic');
+        if (currentTopic) {
+            this.markTopicAsPlayed(currentTopic);
+        }
+        
         // Clear stored data and return to topic selection
         localStorage.removeItem('currentAnswer');
         localStorage.removeItem('currentQuestion');
         localStorage.removeItem('currentTopic');
         window.location.href = 'topic.html';
+    }
+
+    markTopicAsPlayed(topicName) {
+        // Get the topic ID from the topic name
+        const topicMap = {
+            'Geography': '1',
+            'History': '2',
+            'Science': '3',
+            'Sports': '4',
+            'Movies': '5',
+            'Music': '6',
+            'Literature': '7',
+            'Art': '8',
+            'Technology': '9',
+            'Food & Drink': '10',
+            'Nature': '11',
+            'Politics': '12',
+            'Fashion': '13',
+            'Travel': '14',
+            'Games': '15',
+            'Miscellaneous': '16'
+        };
+        
+        const topicId = topicMap[topicName];
+        if (topicId) {
+            // Get current played topics
+            const playedTopics = JSON.parse(localStorage.getItem('playedTopics') || '[]');
+            
+            // Add this topic if not already played
+            if (!playedTopics.includes(topicId)) {
+                playedTopics.push(topicId);
+                localStorage.setItem('playedTopics', JSON.stringify(playedTopics));
+            }
+        }
     }
 }
 

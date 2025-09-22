@@ -2,18 +2,73 @@
  * Topic Selection Navigation
  * Handles 4x4 grid navigation with arrow keys
  * Yellow highlighting for selected cards
+ * Topics disable after being played during session
  */
 
 class TopicController {
     constructor() {
         this.initializeElements();
         this.bindEvents();
-        this.currentSelectedIndex = 0;
-        this.selectTopicByIndex(0); // Start with first topic selected
+        this.initializeQuiz();
     }
 
     initializeElements() {
         this.topicCards = document.querySelectorAll('.topic-card');
+    }
+
+    initializeQuiz() {
+        // Clear temporary quiz data
+        this.clearQuizData();
+        
+        // Check if this is a fresh app start (no session marker)
+        if (!sessionStorage.getItem('quizSessionActive')) {
+            // Fresh app start - clear played topics
+            localStorage.removeItem('playedTopics');
+            sessionStorage.setItem('quizSessionActive', 'true');
+        }
+        
+        // Load any topics that were played in this session
+        this.loadPlayedTopics();
+        
+        // Select first available topic
+        this.currentSelectedIndex = 0;
+        this.selectFirstAvailableTopic();
+    }
+
+    clearQuizData() {
+        // Clear quiz-related data but preserve session state
+        localStorage.removeItem('selectedTopic');
+        localStorage.removeItem('selectedTopicName');
+        localStorage.removeItem('questionIndex');
+        localStorage.removeItem('currentAnswer');
+        localStorage.removeItem('currentQuestion');
+        localStorage.removeItem('currentTopic');
+    }
+
+    loadPlayedTopics() {
+        // Load list of played topics from this session
+        const playedTopics = JSON.parse(localStorage.getItem('playedTopics') || '[]');
+        
+        // Mark played topics as disabled
+        playedTopics.forEach(topicId => {
+            const card = document.querySelector(`[data-topic="${topicId}"]`);
+            if (card) {
+                card.classList.add('disabled');
+            }
+        });
+    }
+
+    selectFirstAvailableTopic() {
+        // Find the first available (non-disabled) topic
+        for (let i = 0; i < this.topicCards.length; i++) {
+            if (!this.topicCards[i].classList.contains('disabled')) {
+                this.currentSelectedIndex = i;
+                this.selectTopicByIndex(i);
+                return;
+            }
+        }
+        // If all topics are disabled, select first one anyway
+        this.selectTopicByIndex(0);
     }
 
     bindEvents() {
@@ -49,32 +104,57 @@ class TopicController {
     }
 
     navigateUp() {
-        // Move up one row (4 positions back)
-        if (this.currentSelectedIndex >= 4) {
-            this.selectTopicByIndex(this.currentSelectedIndex - 4);
+        // Move up one row (4 positions back), jumping over disabled topics
+        let targetIndex = this.currentSelectedIndex;
+        while (targetIndex >= 4) {
+            targetIndex -= 4;
+            if (!this.topicCards[targetIndex].classList.contains('disabled')) {
+                this.selectTopicByIndex(targetIndex);
+                return;
+            }
         }
+        // If no available topic found in direction, stay put
     }
 
     navigateDown() {
-        // Move down one row (4 positions forward)
-        if (this.currentSelectedIndex < 12) {
-            this.selectTopicByIndex(this.currentSelectedIndex + 4);
+        // Move down one row (4 positions forward), jumping over disabled topics
+        let targetIndex = this.currentSelectedIndex;
+        while (targetIndex < 12) {
+            targetIndex += 4;
+            if (!this.topicCards[targetIndex].classList.contains('disabled')) {
+                this.selectTopicByIndex(targetIndex);
+                return;
+            }
         }
+        // If no available topic found in direction, stay put
     }
 
     navigateLeft() {
-        // Move left within the same row
-        if (this.currentSelectedIndex % 4 !== 0) {
-            this.selectTopicByIndex(this.currentSelectedIndex - 1);
+        // Move left within the same row, jumping over disabled topics
+        let targetIndex = this.currentSelectedIndex;
+        while (targetIndex % 4 !== 0) {
+            targetIndex -= 1;
+            if (!this.topicCards[targetIndex].classList.contains('disabled')) {
+                this.selectTopicByIndex(targetIndex);
+                return;
+            }
         }
+        // If no available topic found in direction, stay put
     }
 
     navigateRight() {
-        // Move right within the same row
-        if (this.currentSelectedIndex % 4 !== 3) {
-            this.selectTopicByIndex(this.currentSelectedIndex + 1);
+        // Move right within the same row, jumping over disabled topics
+        let targetIndex = this.currentSelectedIndex;
+        while (targetIndex % 4 !== 3) {
+            targetIndex += 1;
+            if (!this.topicCards[targetIndex].classList.contains('disabled')) {
+                this.selectTopicByIndex(targetIndex);
+                return;
+            }
         }
+        // If no available topic found in direction, stay put
     }
+
 
     selectTopicByIndex(index) {
         // Remove selected class from all cards
@@ -91,7 +171,7 @@ class TopicController {
 
     selectCurrentTopic() {
         const currentCard = this.topicCards[this.currentSelectedIndex];
-        if (currentCard) {
+        if (currentCard && !currentCard.classList.contains('disabled')) {
             const topicId = currentCard.getAttribute('data-topic');
             const topicTitle = currentCard.querySelector('.topic-title').textContent;
             console.log('Selected topic:', topicId, '-', topicTitle);
@@ -110,6 +190,7 @@ class TopicController {
         // Navigate to question view
         window.location.href = `question.html?topic=${topicId}&q=0`;
     }
+
 }
 
 // Initialize topic controller when DOM is loaded
