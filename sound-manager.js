@@ -16,26 +16,20 @@ class SoundManager {
 
     initializeSounds() {
         // Define available sound effects with proper paths for Electron app
-        // Detect the current location and adjust paths accordingly
+        // Since all quiz types are in subfolders, always use ../ prefix for sound files
         const currentPath = window.location.pathname;
-        let pathPrefix = '';
         
-        // For Electron apps, we need to handle file:// protocol paths
-        if (currentPath.includes('/topicquiz/')) {
-            pathPrefix = '../';
-        }
-        
-        // Alternative: try absolute paths from app root if relative fails
+        // Quiz types are always in subfolders, so sounds are always one level up
         const soundFiles = {
-            ding: `${pathPrefix}sound-effects/ding.mp3`,
-            correct: `${pathPrefix}sound-effects/correct.mp3`,
-            buzzer: `${pathPrefix}sound-effects/buzzer.mp3`,
-            error: `${pathPrefix}sound-effects/error.mp3`,
-            completed: `${pathPrefix}sound-effects/completed.mp3`
+            ding: '../sound-effects/ding.mp3',
+            correct: '../sound-effects/correct.mp3',
+            buzzer: '../sound-effects/buzzer.mp3',
+            error: '../sound-effects/error.mp3',
+            completed: '../sound-effects/completed.mp3'
         };
         
         console.log('Current path:', currentPath);
-        console.log('Path prefix:', pathPrefix);
+        console.log('Using sound files from parent directory (../sound-effects/)');
 
         // Pre-load audio objects for better performance
         Object.keys(soundFiles).forEach(soundName => {

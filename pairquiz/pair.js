@@ -16,6 +16,13 @@ class PairController {
         this.leftItemSelected = false; // Track if left item was selected first
         this.gameState = 'playing'; // 'playing', 'finished', 'result'
         
+        // Check if sound manager is available
+        if (typeof soundManager !== 'undefined') {
+            console.log('Sound manager is available for pair quiz');
+        } else {
+            console.warn('Sound manager not found - sounds will not play');
+        }
+        
         this.initializeElements();
         this.bindEvents();
         this.loadPairData();
@@ -332,6 +339,14 @@ class PairController {
         );
         
         if (isCorrectPair) {
+            // Play correct sound
+            if (typeof soundManager !== 'undefined') {
+                console.log('Playing correct sound for pair:', leftText, '-', rightText);
+                soundManager.playCorrect();
+            } else {
+                console.warn('Sound manager not available');
+            }
+            
             // Correct pair - move to center
             this.matchedPairs.push({
                 leftIndex: this.selectedLeftIndex,
@@ -359,10 +374,22 @@ class PairController {
             
             // Check if game is complete
             if (this.matchedPairs.length === this.totalPairs) {
+                // Play completion sound
+                if (typeof soundManager !== 'undefined') {
+                    setTimeout(() => soundManager.playCompleted(), 500);
+                }
                 this.gameState = 'finished';
                 setTimeout(() => this.showResults(), 1000);
             }
         } else {
+            // Play error sound
+            if (typeof soundManager !== 'undefined') {
+                console.log('Playing error sound for wrong pair:', leftText, '-', rightText);
+                soundManager.playError();
+            } else {
+                console.warn('Sound manager not available');
+            }
+            
             // Incorrect pair - end game and show results
             this.gameState = 'finished';
             this.showResults();
