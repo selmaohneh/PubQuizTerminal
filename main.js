@@ -1,4 +1,4 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, ipcMain } = require('electron');
 const { createMenu } = require('./menu');
 
 let mainWindow;
@@ -25,6 +25,11 @@ function createWindow() {
 
   // Create menu
   createMenu(mainWindow);
+
+  // Handle IPC messages
+  ipcMain.on('show-main-page', () => {
+    mainWindow.loadFile('index.html');
+  });
 }
 
 app.whenReady().then(createWindow);

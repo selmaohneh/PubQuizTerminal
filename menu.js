@@ -42,7 +42,9 @@ class MenuController {
       properties: ['openFile'],
       title: 'Select Quiz File',
       filters: [
+        { name: 'Quiz Files', extensions: ['topicquiz', 'pairquiz'] },
         { name: 'Topic Quiz Files', extensions: ['topicquiz'] },
+        { name: 'Pair Quiz Files', extensions: ['pairquiz'] },
         { name: 'All Files', extensions: ['*'] }
       ]
     });
@@ -54,17 +56,29 @@ class MenuController {
       try {
         // Read and parse the quiz file
         const fs = require('fs');
+        const path = require('path');
         const quizData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+        const fileExtension = path.extname(filePath).toLowerCase();
         
-        // Validate the quiz data structure
-        if (this.validateQuizData(quizData)) {
+        // Validate based on file type
+        let isValid = false;
+        if (fileExtension === '.topicquiz') {
+          isValid = this.validateTopicQuizData(quizData);
+        } else if (fileExtension === '.pairquiz') {
+          isValid = this.validatePairQuizData(quizData);
+        }
+        
+        if (isValid) {
           // Store quiz data in a temporary file for persistence between page loads
-          const path = require('path');
           const tempFilePath = path.join(__dirname, 'temp-quiz-data.json');
           fs.writeFileSync(tempFilePath, JSON.stringify(quizData));
           
-          // Show quiz page
-          this.mainWindow.webContents.send('show-quiz-page');
+          // Load appropriate quiz page based on file type
+          if (fileExtension === '.topicquiz') {
+            this.mainWindow.loadFile('topicquiz/topic.html');
+          } else if (fileExtension === '.pairquiz') {
+            this.mainWindow.loadFile('pairquiz/pair.html');
+          }
         } else {
           dialog.showErrorBox('Invalid Quiz File', 'The selected file does not contain valid quiz data.');
         }
@@ -75,7 +89,7 @@ class MenuController {
     }
   }
 
-  validateQuizData(data) {
+  validateTopicQuizData(data) {
     // Check if data is an array with exactly 16 topics
     if (!Array.isArray(data) || data.length !== 16) {
       return false;
@@ -89,6 +103,34 @@ class MenuController {
     }
 
     return true;
+  }
+
+  validatePairQuizData(data) {
+    // Check if data is an array with at least 1 item and max 11 items
+    if (!Array.isArray(data) || data.length < 1 || data.length > 11) {
+      return false;
+    }
+
+    // Count valid pairs (items with both left and right)
+    let validPairs = 0;
+    let extraItems = 0;
+
+    for (const item of data) {
+      if (!item.hasOwnProperty('left') || !item.hasOwnProperty('right')) {
+        return false;
+      }
+      
+      if (item.left && item.right) {
+        validPairs++;
+      } else if (!item.left && item.right) {
+        extraItems++;
+      } else {
+        return false; // Invalid item structure
+      }
+    }
+
+    // Should have at least 1 valid pair, max 10 pairs, and max 1 extra item
+    return validPairs >= 1 && validPairs <= 10 && extraItems <= 1;
   }
 
   loadQuizPage() {
