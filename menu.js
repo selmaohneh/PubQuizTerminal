@@ -42,10 +42,11 @@ class MenuController {
       properties: ['openFile'],
       title: 'Select Quiz File',
       filters: [
-        { name: 'Quiz Files', extensions: ['topicquiz', 'pairquiz', 'sortquiz'] },
+        { name: 'Quiz Files', extensions: ['topicquiz', 'pairquiz', 'sortquiz', 'imagequiz'] },
         { name: 'Topic Quiz Files', extensions: ['topicquiz'] },
         { name: 'Pair Quiz Files', extensions: ['pairquiz'] },
         { name: 'Sort Quiz Files', extensions: ['sortquiz'] },
+        { name: 'Image Quiz Files', extensions: ['imagequiz'] },
         { name: 'All Files', extensions: ['*'] }
       ]
     });
@@ -69,12 +70,20 @@ class MenuController {
           isValid = this.validatePairQuizData(quizData);
         } else if (fileExtension === '.sortquiz') {
           isValid = this.validateSortQuizData(quizData);
+        } else if (fileExtension === '.imagequiz') {
+          isValid = this.validateImageQuizData(quizData);
         }
         
         if (isValid) {
           // Store quiz data in a temporary file for persistence between page loads
           const tempFilePath = path.join(__dirname, 'temp-quiz-data.json');
           fs.writeFileSync(tempFilePath, JSON.stringify(quizData));
+          
+          // For imagequiz, also store the original file path
+          if (fileExtension === '.imagequiz') {
+            const originalFilePath = path.join(__dirname, 'temp-original-path.txt');
+            fs.writeFileSync(originalFilePath, filePath);
+          }
           
           // Load appropriate quiz page based on file type
           if (fileExtension === '.topicquiz') {
@@ -83,6 +92,8 @@ class MenuController {
             this.mainWindow.loadFile('pairquiz/pair.html');
           } else if (fileExtension === '.sortquiz') {
             this.mainWindow.loadFile('sortquiz/sort.html');
+          } else if (fileExtension === '.imagequiz') {
+            this.mainWindow.loadFile('imagequiz/image.html');
           }
         } else {
           dialog.showErrorBox('Invalid Quiz File', 'The selected file does not contain valid quiz data.');
@@ -157,6 +168,32 @@ class MenuController {
     // Check if all items are strings
     for (const item of data.items) {
       if (typeof item !== 'string' || item.trim() === '') {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  validateImageQuizData(data) {
+    // Check if data is an array with at least 1 item
+    if (!Array.isArray(data) || data.length < 1) {
+      return false;
+    }
+
+    // Validate each image item
+    for (const item of data) {
+      if (!item.image || !item.answer) {
+        return false;
+      }
+      
+      // Check if image and answer are strings
+      if (typeof item.image !== 'string' || typeof item.answer !== 'string') {
+        return false;
+      }
+      
+      // Check if strings are not empty
+      if (item.image.trim() === '' || item.answer.trim() === '') {
         return false;
       }
     }

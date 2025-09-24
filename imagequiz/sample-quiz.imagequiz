@@ -1,0 +1,14 @@
+[
+  {
+    "image": "1.jpg",
+    "answer": "Vogel süß"
+  },
+  {
+    "image": "2.png", 
+    "answer": "Vogel größer"
+  },
+  {
+    "image": "3.jpg",
+    "answer": "Viechi"
+  }
+]
