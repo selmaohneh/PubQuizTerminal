@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sort Quiz - PubQuizTerminal</title>
+    <link rel="stylesheet" href="sort.css">
+</head>
+<body>
+    <div class="sort-container">
+        <!-- Game View -->
+        <div class="game-view" id="gameView">
+            <div class="left-column" id="leftColumn">
+                <!-- Left items will be populated by JavaScript -->
+            </div>
+            <div class="center-column" id="centerColumn">
+                <div class="center-graph" id="centerGraph">
+                    <!-- Sorted items graph will appear here -->
+                </div>
+            </div>
+            <div class="right-column" id="rightColumn">
+                <!-- Right items will be populated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Result View -->
+        <div class="result-view" id="resultView" style="display: none;">
+            <div class="result-graph" id="resultGraph">
+                <!-- Final sorted order will be shown here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="../sound-manager.js"></script>
+    <script src="sort.js"></script>
+</body>
+</html>

@@ -42,9 +42,10 @@ class MenuController {
       properties: ['openFile'],
       title: 'Select Quiz File',
       filters: [
-        { name: 'Quiz Files', extensions: ['topicquiz', 'pairquiz'] },
+        { name: 'Quiz Files', extensions: ['topicquiz', 'pairquiz', 'sortquiz'] },
         { name: 'Topic Quiz Files', extensions: ['topicquiz'] },
         { name: 'Pair Quiz Files', extensions: ['pairquiz'] },
+        { name: 'Sort Quiz Files', extensions: ['sortquiz'] },
         { name: 'All Files', extensions: ['*'] }
       ]
     });
@@ -66,6 +67,8 @@ class MenuController {
           isValid = this.validateTopicQuizData(quizData);
         } else if (fileExtension === '.pairquiz') {
           isValid = this.validatePairQuizData(quizData);
+        } else if (fileExtension === '.sortquiz') {
+          isValid = this.validateSortQuizData(quizData);
         }
         
         if (isValid) {
@@ -78,6 +81,8 @@ class MenuController {
             this.mainWindow.loadFile('topicquiz/topic.html');
           } else if (fileExtension === '.pairquiz') {
             this.mainWindow.loadFile('pairquiz/pair.html');
+          } else if (fileExtension === '.sortquiz') {
+            this.mainWindow.loadFile('sortquiz/sort.html');
           }
         } else {
           dialog.showErrorBox('Invalid Quiz File', 'The selected file does not contain valid quiz data.');
@@ -131,6 +136,32 @@ class MenuController {
 
     // Should have at least 1 valid pair, max 10 pairs, and max 1 extra item
     return validPairs >= 1 && validPairs <= 10 && extraItems <= 1;
+  }
+
+  validateSortQuizData(data) {
+    // Check if data has required properties
+    if (!data.upperLabel || !data.lowerLabel || !Array.isArray(data.items)) {
+      return false;
+    }
+
+    // Check if labels are strings
+    if (typeof data.upperLabel !== 'string' || typeof data.lowerLabel !== 'string') {
+      return false;
+    }
+
+    // Check if items array has between 1 and 11 items
+    if (data.items.length < 1 || data.items.length > 11) {
+      return false;
+    }
+
+    // Check if all items are strings
+    for (const item of data.items) {
+      if (typeof item !== 'string' || item.trim() === '') {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   loadQuizPage() {

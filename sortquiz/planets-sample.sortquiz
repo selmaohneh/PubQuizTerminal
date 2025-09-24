@@ -1,0 +1,14 @@
+{
+  "upperLabel": "Closest to Sun",
+  "lowerLabel": "Farthest from Sun",
+  "items": [
+    "Mercury",
+    "Venus",
+    "Earth",
+    "Mars",
+    "Jupiter",
+    "Saturn",
+    "Uranus",
+    "Neptune"
+  ]
+}
