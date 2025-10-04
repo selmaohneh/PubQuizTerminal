@@ -68,6 +68,7 @@ class AnswerController {
             }
         }
     }
+    
 
     goBackToTopics() {
         // Mark the current topic as played

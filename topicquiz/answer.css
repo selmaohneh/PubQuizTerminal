@@ -80,6 +80,7 @@ html, body {
     background: rgba(0, 255, 0, 0.1);
 }
 
+
 /* Responsive design for different screen sizes */
 @media (max-width: 1200px) {
     .question-text {
