@@ -122,7 +122,7 @@ class MenuController {
   }
 
   validatePairQuizData(data) {
-    // Check if data is an array with at least 1 item and max 11 items
+    // Check if data is an array with at least 1 item and max 11 items (same as sort quiz)
     if (!Array.isArray(data) || data.length < 1 || data.length > 11) {
       return false;
     }

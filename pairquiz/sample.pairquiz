@@ -9,10 +9,5 @@
   { "left": "Beijing", "right": "China" },
   { "left": "Cairo", "right": "Egypt" },
   { "left": "Sydney", "right": "Australia" },
-  { "left": "Brasília", "right": "Brazil" },
-  { "left": "Ottawa", "right": "Canada" },
-  { "left": "New Delhi", "right": "India" },
-  { "left": "Mexico City", "right": "Mexico" },
-  { "left": "Seoul", "right": "South Korea" },
-  { "left": "Bangkok", "right": "Thailand" }
+  { "left": "", "right": "Portugal" }
 ]

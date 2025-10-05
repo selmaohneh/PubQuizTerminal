@@ -77,11 +77,17 @@ class AnswerController {
             this.markTopicAsPlayed(currentTopic);
         }
         
-        // Clear stored data and return to topic selection
-        localStorage.removeItem('currentAnswer');
-        localStorage.removeItem('currentQuestion');
-        localStorage.removeItem('currentTopic');
-        window.location.href = 'topic.html';
+        // Check if all topics have been played
+        if (this.areAllTopicsPlayed()) {
+            // All topics played - return to home screen
+            this.returnToHomeScreen();
+        } else {
+            // Clear stored data and return to topic selection
+            localStorage.removeItem('currentAnswer');
+            localStorage.removeItem('currentQuestion');
+            localStorage.removeItem('currentTopic');
+            window.location.href = 'topic.html';
+        }
     }
 
     markTopicAsPlayed(topicName) {
@@ -110,6 +116,42 @@ class AnswerController {
             }
         } else {
             console.error('Topic not found in quiz data:', topicName);
+        }
+    }
+
+    areAllTopicsPlayed() {
+        // Get quiz data to check total number of topics
+        const quizData = JSON.parse(localStorage.getItem('currentQuizData') || 'null');
+        
+        if (!quizData) {
+            console.error('No quiz data available to check if all topics are played');
+            return false;
+        }
+        
+        // Get played topics
+        const playedTopics = JSON.parse(localStorage.getItem('playedTopics') || '[]');
+        
+        // Check if all topics have been played
+        return playedTopics.length >= quizData.length;
+    }
+
+    returnToHomeScreen() {
+        // Clear all quiz-related data
+        localStorage.removeItem('currentAnswer');
+        localStorage.removeItem('currentQuestion');
+        localStorage.removeItem('currentTopic');
+        localStorage.removeItem('currentQuizData');
+        localStorage.removeItem('playedTopics');
+        localStorage.removeItem('quizDataHash');
+        sessionStorage.removeItem('quizSessionActive');
+        
+        // Return to main page
+        if (typeof require !== 'undefined') {
+            const { ipcRenderer } = require('electron');
+            ipcRenderer.send('show-main-page');
+        } else {
+            // Fallback for browser testing
+            window.location.href = '../index.html';
         }
     }
 }
