@@ -48,7 +48,7 @@ class SortController {
     }
 
     loadSortData() {
-        // Try to load sort data from temporary file first
+        // Try to load sort data from temporary file
         if (typeof require !== 'undefined') {
             try {
                 const fs = require('fs');
@@ -61,48 +61,18 @@ class SortController {
                     console.log('Loaded sort data from temp file:', this.sortData);
                     this.initializeGame();
                 } else {
-                    // Fallback to sample file
-                    const sortFilePath = path.join(__dirname, 'sample-quiz.sortquiz');
-                    if (fs.existsSync(sortFilePath)) {
-                        const rawData = fs.readFileSync(sortFilePath, 'utf8');
-                        this.sortData = JSON.parse(rawData);
-                        console.log('Loaded sort data from sample file:', this.sortData);
-                        this.initializeGame();
-                    } else {
-                        console.error('No sort quiz file found');
-                        this.loadFallbackData();
-                    }
+                    console.error('No sort quiz file found');
+                    this.showError('No quiz data found. Please load a quiz file first.');
                 }
             } catch (error) {
                 console.error('Error loading sort data:', error);
-                this.loadFallbackData();
+                this.showError('Error loading quiz data: ' + error.message);
             }
         } else {
-            this.loadFallbackData();
+            this.showError('No quiz data found. Please load a quiz file first.');
         }
     }
 
-    loadFallbackData() {
-        // Fallback for browser testing
-        this.sortData = {
-            "upperLabel": "Hottest",
-            "lowerLabel": "Coldest",
-            "items": [
-                "Sun",
-                "Fire",
-                "Boiling water",
-                "Hot coffee",
-                "Room temperature",
-                "Cool water",
-                "Refrigerator",
-                "Freezer",
-                "Ice",
-                "Liquid nitrogen",
-                "Absolute zero"
-            ]
-        };
-        this.initializeGame();
-    }
 
     initializeGame() {
         // Validate data structure

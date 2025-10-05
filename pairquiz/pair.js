@@ -44,7 +44,7 @@ class PairController {
     }
 
     loadPairData() {
-        // Try to load pair data from temporary file first
+        // Try to load pair data from temporary file
         if (typeof require !== 'undefined') {
             try {
                 const fs = require('fs');
@@ -57,44 +57,18 @@ class PairController {
                     console.log('Loaded pair data from temp file:', this.pairData.length, 'pairs');
                     this.initializeGame();
                 } else {
-                    // Fallback to sample file
-                    const pairFilePath = path.join(__dirname, 'sample-quiz.pairquiz');
-                    if (fs.existsSync(pairFilePath)) {
-                        const rawData = fs.readFileSync(pairFilePath, 'utf8');
-                        this.pairData = JSON.parse(rawData);
-                        console.log('Loaded pair data from sample file:', this.pairData.length, 'pairs');
-                        this.initializeGame();
-                    } else {
-                        console.error('No pair quiz file found');
-                        this.loadFallbackData();
-                    }
+                    console.error('No pair quiz file found');
+                    this.showError('No quiz data found. Please load a quiz file first.');
                 }
             } catch (error) {
                 console.error('Error loading pair data:', error);
-                this.loadFallbackData();
+                this.showError('Error loading quiz data: ' + error.message);
             }
         } else {
-            this.loadFallbackData();
+            this.showError('No quiz data found. Please load a quiz file first.');
         }
     }
 
-    loadFallbackData() {
-        // Fallback for browser testing
-        this.pairData = [
-            { "left": "Paris", "right": "France" },
-            { "left": "London", "right": "England" },
-            { "left": "Tokyo", "right": "Japan" },
-            { "left": "Berlin", "right": "Germany" },
-            { "left": "Madrid", "right": "Spain" },
-            { "left": "Rome", "right": "Italy" },
-            { "left": "Moscow", "right": "Russia" },
-            { "left": "Beijing", "right": "China" },
-            { "left": "Cairo", "right": "Egypt" },
-            { "left": "Sydney", "right": "Australia" },
-            { "left": "", "right": "Brazil" }
-        ];
-        this.initializeGame();
-    }
 
     initializeGame() {
         // Separate valid pairs from extra items

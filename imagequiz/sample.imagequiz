@@ -1,14 +1,14 @@
 [
   {
     "image": "1.jpg",
-    "answer": "Vogel süß"
+    "answer": "Cute bird"
   },
   {
     "image": "2.png", 
-    "answer": "Vogel größer"
+    "answer": "Larger bird"
   },
   {
     "image": "3.jpg",
-    "answer": "Viechi"
+    "answer": "Animals"
   }
 ]

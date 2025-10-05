@@ -1,0 +1,18 @@
+[
+  { "left": "Paris", "right": "France" },
+  { "left": "London", "right": "England" },
+  { "left": "Tokyo", "right": "Japan" },
+  { "left": "Berlin", "right": "Germany" },
+  { "left": "Madrid", "right": "Spain" },
+  { "left": "Rome", "right": "Italy" },
+  { "left": "Moscow", "right": "Russia" },
+  { "left": "Beijing", "right": "China" },
+  { "left": "Cairo", "right": "Egypt" },
+  { "left": "Sydney", "right": "Australia" },
+  { "left": "Brasília", "right": "Brazil" },
+  { "left": "Ottawa", "right": "Canada" },
+  { "left": "New Delhi", "right": "India" },
+  { "left": "Mexico City", "right": "Mexico" },
+  { "left": "Seoul", "right": "South Korea" },
+  { "left": "Bangkok", "right": "Thailand" }
+]
