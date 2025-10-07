@@ -85,43 +85,23 @@ class TopicController {
     }
 
     isNewQuizFile() {
-        // Check if the current quiz data is different from the stored one
-        if (!this.quizData) {
+        // Check if the quiz file was reloaded by comparing timestamps
+        if (!this.loadTimestamp) {
             return false;
         }
-        
-        const currentHash = this.generateQuizDataHash(this.quizData);
-        const storedHash = localStorage.getItem('quizDataHash');
-        
-        return currentHash !== storedHash;
+
+        const storedTimestamp = localStorage.getItem('quizLoadTimestamp');
+
+        return this.loadTimestamp.toString() !== storedTimestamp;
     }
 
     storeQuizDataHash() {
-        // Store a hash of the current quiz data for comparison
-        if (this.quizData) {
-            const hash = this.generateQuizDataHash(this.quizData);
-            localStorage.setItem('quizDataHash', hash);
+        // Store the load timestamp for comparison
+        if (this.loadTimestamp) {
+            localStorage.setItem('quizLoadTimestamp', this.loadTimestamp.toString());
         }
     }
 
-    generateQuizDataHash(quizData) {
-        // Generate a simple hash of the quiz data to detect changes
-        // We'll use the stringified data and create a simple hash
-        const dataString = JSON.stringify(quizData.map(topic => ({
-            name: topic.name,
-            question: topic.question,
-            answer: topic.answer
-        })));
-        
-        // Simple hash function (not cryptographically secure, but good enough for our use)
-        let hash = 0;
-        for (let i = 0; i < dataString.length; i++) {
-            const char = dataString.charCodeAt(i);
-            hash = ((hash << 5) - hash) + char;
-            hash = hash & hash; // Convert to 32-bit integer
-        }
-        return hash.toString();
-    }
 
     loadQuizData(quizData) {
         this.quizData = quizData;
@@ -141,11 +121,12 @@ class TopicController {
                 const fs = require('fs');
                 const path = require('path');
                 const tempFilePath = path.join(__dirname, '..', 'temp-quiz-data.json');
-                
+
                 if (fs.existsSync(tempFilePath)) {
-                    const quizData = JSON.parse(fs.readFileSync(tempFilePath, 'utf8'));
-                    console.log('Loaded quiz data from temp file:', quizData.length, 'topics');
-                    this.loadQuizData(quizData);
+                    const fileContent = JSON.parse(fs.readFileSync(tempFilePath, 'utf8'));
+                    this.loadTimestamp = fileContent.loadTimestamp;
+                    console.log('Loaded quiz data from temp file:', fileContent.quizData.length, 'topics');
+                    this.loadQuizData(fileContent.quizData);
                 }
             } catch (error) {
                 console.error('Error loading quiz data from temp file:', error);
@@ -175,21 +156,6 @@ class TopicController {
         document.addEventListener('keydown', (event) => {
             this.handleKeyNavigation(event);
         });
-
-        // Listen for quiz data from main process
-        if (typeof require !== 'undefined') {
-            const { ipcRenderer } = require('electron');
-            ipcRenderer.on('load-quiz-data', (event, quizData) => {
-                console.log('Received quiz data via IPC:', quizData);
-                this.loadQuizData(quizData);
-            });
-            
-            // Listen for show-quiz-page to reload the topic page when new quiz is loaded
-            ipcRenderer.on('show-quiz-page', () => {
-                console.log('New quiz file loaded - reloading topic page');
-                window.location.reload(); // Reload current page to reset state
-            });
-        }
     }
 
     handleKeyNavigation(event) {

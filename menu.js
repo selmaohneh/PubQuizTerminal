@@ -187,7 +187,11 @@ class QuizFileHandler {
 
   saveQuizData(filePath, fileExtension, quizData) {
     const tempFilePath = path.join(__dirname, STORAGE_FILES.TEMP_QUIZ_DATA);
-    fs.writeFileSync(tempFilePath, JSON.stringify(quizData));
+    const dataToSave = {
+      quizData: quizData,
+      loadTimestamp: Date.now() // Add timestamp to detect file reloads
+    };
+    fs.writeFileSync(tempFilePath, JSON.stringify(dataToSave));
 
     if (fileExtension === QUIZ_TYPES.IMAGE.extension) {
       const originalPathFile = path.join(__dirname, STORAGE_FILES.TEMP_ORIGINAL_PATH);
