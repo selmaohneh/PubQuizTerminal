@@ -6,7 +6,8 @@ const QUIZ_TYPES = {
   TOPIC: { extension: '.topicquiz', path: 'topicquiz/topic.html' },
   PAIR: { extension: '.pairquiz', path: 'pairquiz/pair.html' },
   SORT: { extension: '.sortquiz', path: 'sortquiz/sort.html' },
-  IMAGE: { extension: '.imagequiz', path: 'imagequiz/image.html' }
+  IMAGE: { extension: '.imagequiz', path: 'imagequiz/image.html' },
+  TITLE: { extension: '.title', path: 'titlequiz/title.html' }
 };
 
 const STORAGE_FILES = {
@@ -34,11 +35,12 @@ class QuizFileHandler {
       properties: ['openFile'],
       title: 'Select Quiz File',
       filters: [
-        { name: 'Quiz Files', extensions: ['topicquiz', 'pairquiz', 'sortquiz', 'imagequiz'] },
+        { name: 'Quiz Files', extensions: ['topicquiz', 'pairquiz', 'sortquiz', 'imagequiz', 'title'] },
         { name: 'Topic Quiz Files', extensions: ['topicquiz'] },
         { name: 'Pair Quiz Files', extensions: ['pairquiz'] },
         { name: 'Sort Quiz Files', extensions: ['sortquiz'] },
         { name: 'Image Quiz Files', extensions: ['imagequiz'] },
+        { name: 'Title Files', extensions: ['title'] },
         { name: 'All Files', extensions: ['*'] }
       ]
     });
@@ -72,7 +74,8 @@ class QuizFileHandler {
       [QUIZ_TYPES.TOPIC.extension]: this.validateTopicQuiz.bind(this),
       [QUIZ_TYPES.PAIR.extension]: this.validatePairQuiz.bind(this),
       [QUIZ_TYPES.SORT.extension]: this.validateSortQuiz.bind(this),
-      [QUIZ_TYPES.IMAGE.extension]: this.validateImageQuiz.bind(this)
+      [QUIZ_TYPES.IMAGE.extension]: this.validateImageQuiz.bind(this),
+      [QUIZ_TYPES.TITLE.extension]: this.validateTitleQuiz.bind(this)
     };
 
     const validator = validators[fileExtension];
@@ -161,6 +164,22 @@ class QuizFileHandler {
       if (item.image.trim() === '' || item.answer.trim() === '') {
         return { isValid: false, errors: ['Image and answer cannot be empty'] };
       }
+    }
+
+    return { isValid: true };
+  }
+
+  validateTitleQuiz(data) {
+    if (!data || typeof data !== 'object') {
+      return { isValid: false, errors: ['Title quiz must be an object'] };
+    }
+
+    if (!data.title || typeof data.title !== 'string') {
+      return { isValid: false, errors: ['Title quiz must have a title property that is a string'] };
+    }
+
+    if (data.title.trim() === '') {
+      return { isValid: false, errors: ['Title cannot be empty'] };
     }
 
     return { isValid: true };
