@@ -1,1 +1,1 @@
-/home/cello/develop/PubQuizTerminal/imagequiz/sample.imagequiz
+/home/neummarc/develop/PubQuizTerminal/imagequiz/sample.imagequiz

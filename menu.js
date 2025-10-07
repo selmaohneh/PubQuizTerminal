@@ -1,44 +1,36 @@
 const { Menu, dialog, ipcMain } = require('electron');
+const fs = require('fs');
+const path = require('path');
 
-class MenuController {
+const QUIZ_TYPES = {
+  TOPIC: { extension: '.topicquiz', path: 'topicquiz/topic.html' },
+  PAIR: { extension: '.pairquiz', path: 'pairquiz/pair.html' },
+  SORT: { extension: '.sortquiz', path: 'sortquiz/sort.html' },
+  IMAGE: { extension: '.imagequiz', path: 'imagequiz/image.html' }
+};
+
+const STORAGE_FILES = {
+  TEMP_QUIZ_DATA: 'temp-quiz-data.json',
+  TEMP_ORIGINAL_PATH: 'temp-original-path.txt'
+};
+
+class QuizFileHandler {
   constructor(mainWindow) {
     this.mainWindow = mainWindow;
-    this.setupIPC();
-    this.createMenu();
   }
 
-  setupIPC() {
-    // Handle navigation to quiz page
-    ipcMain.on('load-quiz-page', () => {
-      this.loadQuizPage();
-    });
+  async openQuizFile() {
+    const result = await this.showFileDialog();
+    if (result.canceled || result.filePaths.length === 0) {
+      return;
+    }
 
-    // Handle navigation back to main page
-    ipcMain.on('navigate-to-main', () => {
-      this.loadMainPage();
-    });
+    const filePath = result.filePaths[0];
+    this.loadQuizFile(filePath);
   }
 
-  createMenu() {
-    const template = [
-      {
-        label: 'File',
-        submenu: [
-          {
-            label: 'Open',
-            accelerator: 'CmdOrCtrl+O',
-            click: () => this.handleOpenFolder()
-          }
-        ]
-      }
-    ];
-
-    const menu = Menu.buildFromTemplate(template);
-    Menu.setApplicationMenu(menu);
-  }
-
-  async handleOpenFolder() {
-    const result = await dialog.showOpenDialog(this.mainWindow, {
+  async showFileDialog() {
+    return dialog.showOpenDialog(this.mainWindow, {
       properties: ['openFile'],
       title: 'Select Quiz File',
       filters: [
@@ -50,155 +42,181 @@ class MenuController {
         { name: 'All Files', extensions: ['*'] }
       ]
     });
-    
-    if (!result.canceled && result.filePaths.length > 0) {
-      const filePath = result.filePaths[0];
-      console.log('Selected quiz file:', filePath);
-      
-      try {
-        // Read and parse the quiz file
-        const fs = require('fs');
-        const path = require('path');
-        const quizData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-        const fileExtension = path.extname(filePath).toLowerCase();
-        
-        // Validate based on file type
-        let isValid = false;
-        if (fileExtension === '.topicquiz') {
-          isValid = this.validateTopicQuizData(quizData);
-        } else if (fileExtension === '.pairquiz') {
-          isValid = this.validatePairQuizData(quizData);
-        } else if (fileExtension === '.sortquiz') {
-          isValid = this.validateSortQuizData(quizData);
-        } else if (fileExtension === '.imagequiz') {
-          isValid = this.validateImageQuizData(quizData);
-        }
-        
-        if (isValid) {
-          // Store quiz data in a temporary file for persistence between page loads
-          const tempFilePath = path.join(__dirname, 'temp-quiz-data.json');
-          fs.writeFileSync(tempFilePath, JSON.stringify(quizData));
-          
-          // For imagequiz, also store the original file path
-          if (fileExtension === '.imagequiz') {
-            const originalFilePath = path.join(__dirname, 'temp-original-path.txt');
-            fs.writeFileSync(originalFilePath, filePath);
-          }
-          
-          // Load appropriate quiz page based on file type
-          if (fileExtension === '.topicquiz') {
-            this.mainWindow.loadFile('topicquiz/topic.html');
-          } else if (fileExtension === '.pairquiz') {
-            this.mainWindow.loadFile('pairquiz/pair.html');
-          } else if (fileExtension === '.sortquiz') {
-            this.mainWindow.loadFile('sortquiz/sort.html');
-          } else if (fileExtension === '.imagequiz') {
-            this.mainWindow.loadFile('imagequiz/image.html');
-          }
-        } else {
-          dialog.showErrorBox('Invalid Quiz File', 'The selected file does not contain valid quiz data.');
-        }
-      } catch (error) {
-        console.error('Error loading quiz file:', error);
-        dialog.showErrorBox('Error Loading File', 'Could not load the selected quiz file. Please check the file format.');
+  }
+
+  loadQuizFile(filePath) {
+    try {
+      const quizData = this.readQuizFile(filePath);
+      const fileExtension = path.extname(filePath).toLowerCase();
+      const validation = this.validateQuizData(fileExtension, quizData);
+
+      if (!validation.isValid) {
+        this.showValidationError(validation.errors);
+        return;
       }
+
+      this.saveQuizData(filePath, fileExtension, quizData);
+      this.navigateToQuiz(fileExtension);
+    } catch (error) {
+      this.showError('Error loading quiz file', error.message);
     }
   }
 
-  validateTopicQuizData(data) {
-    // Check if data is an array with exactly 16 topics
+  readQuizFile(filePath) {
+    const rawData = fs.readFileSync(filePath, 'utf8');
+    return JSON.parse(rawData);
+  }
+
+  validateQuizData(fileExtension, data) {
+    const validators = {
+      [QUIZ_TYPES.TOPIC.extension]: this.validateTopicQuiz.bind(this),
+      [QUIZ_TYPES.PAIR.extension]: this.validatePairQuiz.bind(this),
+      [QUIZ_TYPES.SORT.extension]: this.validateSortQuiz.bind(this),
+      [QUIZ_TYPES.IMAGE.extension]: this.validateImageQuiz.bind(this)
+    };
+
+    const validator = validators[fileExtension];
+    return validator ? validator(data) : { isValid: false, errors: ['Unknown quiz type'] };
+  }
+
+  validateTopicQuiz(data) {
     if (!Array.isArray(data) || data.length !== 16) {
-      return false;
+      return { isValid: false, errors: ['Topic quiz must have exactly 16 topics'] };
     }
 
-    // Validate each topic
     for (const topic of data) {
       if (!topic.name || !topic.question || !topic.answer) {
-        return false;
+        return { isValid: false, errors: ['Each topic must have name, question, and answer'] };
       }
     }
 
-    return true;
+    return { isValid: true };
   }
 
-  validatePairQuizData(data) {
-    // Check if data is an array with at least 1 item and max 11 items (same as sort quiz)
+  validatePairQuiz(data) {
     if (!Array.isArray(data) || data.length < 1 || data.length > 11) {
-      return false;
+      return { isValid: false, errors: ['Pair quiz must have 1-11 items'] };
     }
 
-    // Count valid pairs (items with both left and right)
     let validPairs = 0;
     let extraItems = 0;
 
     for (const item of data) {
       if (!item.hasOwnProperty('left') || !item.hasOwnProperty('right')) {
-        return false;
+        return { isValid: false, errors: ['Each item must have left and right properties'] };
       }
-      
+
       if (item.left && item.right) {
         validPairs++;
       } else if (!item.left && item.right) {
         extraItems++;
       } else {
-        return false; // Invalid item structure
+        return { isValid: false, errors: ['Invalid item structure'] };
       }
     }
 
-    // Should have at least 1 valid pair, max 10 pairs, and max 1 extra item
-    return validPairs >= 1 && validPairs <= 10 && extraItems <= 1;
+    if (validPairs < 1 || validPairs > 10 || extraItems > 1) {
+      return { isValid: false, errors: ['Must have 1-10 valid pairs and max 1 extra item'] };
+    }
+
+    return { isValid: true };
   }
 
-  validateSortQuizData(data) {
-    // Check if data has required properties
+  validateSortQuiz(data) {
     if (!data.upperLabel || !data.lowerLabel || !Array.isArray(data.items)) {
-      return false;
+      return { isValid: false, errors: ['Sort quiz must have upperLabel, lowerLabel, and items'] };
     }
 
-    // Check if labels are strings
     if (typeof data.upperLabel !== 'string' || typeof data.lowerLabel !== 'string') {
-      return false;
+      return { isValid: false, errors: ['Labels must be strings'] };
     }
 
-    // Check if items array has between 1 and 11 items
-    if (data.items.length < 1 || data.items.length > 11) {
-      return false;
+    if (data.items.length < 2 || data.items.length > 11) {
+      return { isValid: false, errors: ['Sort quiz must have 2-11 items'] };
     }
 
-    // Check if all items are strings
     for (const item of data.items) {
       if (typeof item !== 'string' || item.trim() === '') {
-        return false;
+        return { isValid: false, errors: ['All items must be non-empty strings'] };
       }
     }
 
-    return true;
+    return { isValid: true };
   }
 
-  validateImageQuizData(data) {
-    // Check if data is an array with at least 1 item
+  validateImageQuiz(data) {
     if (!Array.isArray(data) || data.length < 1) {
-      return false;
+      return { isValid: false, errors: ['Image quiz must have at least 1 item'] };
     }
 
-    // Validate each image item
     for (const item of data) {
       if (!item.image || !item.answer) {
-        return false;
+        return { isValid: false, errors: ['Each item must have image and answer'] };
       }
-      
-      // Check if image and answer are strings
+
       if (typeof item.image !== 'string' || typeof item.answer !== 'string') {
-        return false;
+        return { isValid: false, errors: ['Image and answer must be strings'] };
       }
-      
-      // Check if strings are not empty
+
       if (item.image.trim() === '' || item.answer.trim() === '') {
-        return false;
+        return { isValid: false, errors: ['Image and answer cannot be empty'] };
       }
     }
 
-    return true;
+    return { isValid: true };
+  }
+
+  saveQuizData(filePath, fileExtension, quizData) {
+    const tempFilePath = path.join(__dirname, STORAGE_FILES.TEMP_QUIZ_DATA);
+    fs.writeFileSync(tempFilePath, JSON.stringify(quizData));
+
+    if (fileExtension === QUIZ_TYPES.IMAGE.extension) {
+      const originalPathFile = path.join(__dirname, STORAGE_FILES.TEMP_ORIGINAL_PATH);
+      fs.writeFileSync(originalPathFile, filePath);
+    }
+  }
+
+  navigateToQuiz(fileExtension) {
+    const quizType = Object.values(QUIZ_TYPES).find(type => type.extension === fileExtension);
+    if (quizType) {
+      this.mainWindow.loadFile(quizType.path);
+    }
+  }
+
+  showValidationError(errors) {
+    dialog.showErrorBox('Invalid Quiz File', errors.join('\n'));
+  }
+
+  showError(title, message) {
+    dialog.showErrorBox(title, message);
+  }
+}
+
+class MenuController {
+  constructor(mainWindow) {
+    this.mainWindow = mainWindow;
+    this.fileHandler = new QuizFileHandler(mainWindow);
+    this.setupIPC();
+    this.createMenu();
+  }
+
+  setupIPC() {
+    ipcMain.on('load-quiz-page', () => this.loadQuizPage());
+    ipcMain.on('navigate-to-main', () => this.loadMainPage());
+  }
+
+  createMenu() {
+    const template = [{
+      label: 'File',
+      submenu: [{
+        label: 'Open',
+        accelerator: 'CmdOrCtrl+O',
+        click: () => this.fileHandler.openQuizFile()
+      }]
+    }];
+
+    const menu = Menu.buildFromTemplate(template);
+    Menu.setApplicationMenu(menu);
   }
 
   loadQuizPage() {
