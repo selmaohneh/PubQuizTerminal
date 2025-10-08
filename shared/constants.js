@@ -57,7 +57,8 @@ export const IPC_CHANNELS = {
   SHOW_QUIZ_PAGE: 'show-quiz-page',
   LOAD_QUIZ_PAGE: 'load-quiz-page',
   LOAD_QUIZ_DATA: 'load-quiz-data',
-  NAVIGATE_TO_MAIN: 'navigate-to-main'
+  NAVIGATE_TO_MAIN: 'navigate-to-main',
+  QUIZ_COMPLETED: 'quiz-completed'
 };
 
 export const TOPIC_QUIZ = {

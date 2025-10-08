@@ -53,7 +53,8 @@ class PairController {
                 
                 if (fs.existsSync(tempFilePath)) {
                     const rawData = fs.readFileSync(tempFilePath, 'utf8');
-                    this.pairData = JSON.parse(rawData);
+                    const parsedData = JSON.parse(rawData);
+                    this.pairData = parsedData.quizData || parsedData;
                     console.log('Loaded pair data from temp file:', this.pairData.length, 'pairs');
                     this.initializeGame();
                 } else {
@@ -457,10 +458,10 @@ class PairController {
     }
 
     returnToMenu() {
-        // Return to main page
+        // Send IPC message to signal quiz completion
         if (typeof require !== 'undefined') {
             const { ipcRenderer } = require('electron');
-            ipcRenderer.send('show-main-page');
+            ipcRenderer.send('quiz-completed');
         } else {
             // Fallback for browser testing
             window.location.href = '../index.html';

@@ -97,7 +97,7 @@ class AnswerController extends BaseQuizController {
 
   returnToHomeScreen() {
     this.storage.clearAllQuizData();
-    this.navigateToMainPage();
+    this.quizCompleted();
   }
 }
 

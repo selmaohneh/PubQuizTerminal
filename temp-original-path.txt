@@ -1,1 +1,1 @@
-/home/neummarc/develop/PubQuizTerminal/imagequiz/sample.imagequiz
+/home/neummarc/develop/PubQuizTerminal/test-quizzes/1.imagequiz

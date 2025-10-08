@@ -66,4 +66,8 @@ export class BaseQuizController {
   navigateToMainPage() {
     this.ipc.showMainPage();
   }
+
+  quizCompleted() {
+    this.ipc.quizCompleted();
+  }
 }

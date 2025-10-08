@@ -145,10 +145,10 @@ class AnswerController {
         localStorage.removeItem('quizDataHash');
         sessionStorage.removeItem('quizSessionActive');
         
-        // Return to main page
+        // Send IPC message to signal quiz completion
         if (typeof require !== 'undefined') {
             const { ipcRenderer } = require('electron');
-            ipcRenderer.send('show-main-page');
+            ipcRenderer.send('quiz-completed');
         } else {
             // Fallback for browser testing
             window.location.href = '../index.html';

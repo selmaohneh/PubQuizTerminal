@@ -546,7 +546,7 @@ class SortController extends BaseQuizController {
   }
 
   returnToMenu() {
-    this.navigateToMainPage();
+    this.quizCompleted();
   }
 }
 

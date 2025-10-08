@@ -33,7 +33,9 @@ class TitleController {
 
             if (fs.existsSync(tempFilePath)) {
                 const rawData = fs.readFileSync(tempFilePath, 'utf8');
-                this.titleData = JSON.parse(rawData);
+                const data = JSON.parse(rawData);
+                // Handle both wrapped and unwrapped formats
+                this.titleData = data.quizData || data;
                 this.displayTitle();
             } else {
                 console.error('No title data found at:', tempFilePath);
@@ -46,12 +48,12 @@ class TitleController {
     }
 
     displayTitle() {
-        if (!this.titleData || !this.titleData.title || !this.titleData.subtitle) {
-            this.showError('Invalid title data - missing title or subtitle');
+        if (!this.titleData || !this.titleData.title) {
+            this.showError('Invalid title data - missing title');
             return;
         }
 
-        this.subtitleText.textContent = this.titleData.subtitle;
+        this.subtitleText.textContent = this.titleData.subtitle || '';
         this.titleText.textContent = this.titleData.title;
     }
 
@@ -60,10 +62,10 @@ class TitleController {
     }
 
     returnToMainMenu() {
-        // Send IPC message to return to main menu
+        // Send IPC message to signal quiz completion
         if (typeof require !== 'undefined') {
             const { ipcRenderer } = require('electron');
-            ipcRenderer.send('show-main-page');
+            ipcRenderer.send('quiz-completed');
         } else {
             // Fallback for development
             window.location.href = '../index.html';

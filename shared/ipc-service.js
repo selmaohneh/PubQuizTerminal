@@ -28,6 +28,10 @@ export class IPCService {
     this.send(IPC_CHANNELS.SHOW_MAIN_PAGE);
   }
 
+  static quizCompleted() {
+    this.send(IPC_CHANNELS.QUIZ_COMPLETED);
+  }
+
   static loadQuizPage() {
     this.send(IPC_CHANNELS.LOAD_QUIZ_PAGE);
   }

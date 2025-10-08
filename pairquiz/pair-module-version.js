@@ -356,7 +356,7 @@ class PairController extends BaseQuizController {
   }
 
   returnToMenu() {
-    this.navigateToMainPage();
+    this.quizCompleted();
   }
 }
 

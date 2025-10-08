@@ -122,7 +122,7 @@ class ImageController extends BaseQuizController {
   }
 
   returnToMainMenu() {
-    this.navigateToMain();
+    this.quizCompleted();
   }
 
   showError(message) {

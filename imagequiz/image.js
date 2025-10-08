@@ -42,10 +42,11 @@ class ImageController {
             const path = require('path');
             const tempFilePath = path.join(__dirname, '..', 'temp-quiz-data.json');
             const originalPathFile = path.join(__dirname, '..', 'temp-original-path.txt');
-            
+
             if (fs.existsSync(tempFilePath)) {
                 const rawData = fs.readFileSync(tempFilePath, 'utf8');
-                this.imageData = JSON.parse(rawData);
+                const parsedData = JSON.parse(rawData);
+                this.imageData = parsedData.quizData || parsedData;
                 
                 // Try to read original file path
                 if (fs.existsSync(originalPathFile)) {
@@ -153,10 +154,10 @@ class ImageController {
     }
 
     returnToMainMenu() {
-        // Send IPC message to return to main menu
+        // Send IPC message to signal quiz completion
         if (typeof require !== 'undefined') {
             const { ipcRenderer } = require('electron');
-            ipcRenderer.send('navigate-to-main');
+            ipcRenderer.send('quiz-completed');
         } else {
             // Fallback for development
             window.location.href = '../index.html';
