@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-PubQuizTerminal is an Electron-based quiz application with four distinct quiz types. The app uses a terminal-like interface with keyboard-only navigation. All quiz data is loaded from external files with custom extensions.
+PubQuizTerminal is an Electron-based quiz application with five distinct quiz types. The app uses a terminal-like interface with keyboard-only navigation. All quiz data is loaded from external files with custom extensions. Supports both single-file loading and folder playlists for sequential quiz playback.
 
 ## Development Commands
 
@@ -30,11 +30,24 @@ npm run dist   # Create distributable packages
 
 ### Menu System (menu.js)
 - **MenuController** orchestrates the menu and IPC communication
-- **QuizFileHandler** handles File > Open dialog and quiz file operations
+- **QuizFileHandler** handles File > Open dialog and quiz file/folder operations
 - Validates quiz data based on file extension using dedicated validator methods
-- Stores quiz data in `temp-quiz-data.json` for persistence between page loads
+- Stores quiz data in `temp-quiz-data.json` for persistence between page loads (includes `loadTimestamp` field)
 - For image quizzes, also stores original file path in `temp-original-path.txt`
+- For folder playlists, stores list in `temp-playlist.json` with current index
 - Routes to appropriate quiz view based on extension via `QUIZ_TYPES` mapping
+- Handles `quiz-completed` IPC event to advance playlist or return to main menu
+
+### Shared Services (/shared/)
+- **utils.js**: Common utilities like `shuffleArray`, `hashString`, and Electron module helpers
+- **storage-service.js**: Local/session storage abstractions
+- **sound-service.js**: Sound effects wrapper
+- **error-handler.js**: Centralized error handling
+
+### Validators (/validators/)
+- **validator-factory.js**: Factory pattern for quiz validation
+- Individual validator classes per quiz type (topic, pair, sort, image)
+- **base-validator.js**: Base validation logic
 
 ### Sound System (sound-manager.js)
 - Global SoundManager instance provides audio effects
@@ -55,9 +68,9 @@ All quiz types are in subdirectories with their own HTML/CSS/JS files:
 - **State Management**:
   - Tracks played topics in `localStorage.playedTopics`
   - Session detection via `sessionStorage.quizSessionActive`
-  - Quiz data hash comparison to detect new files and reset state
+  - Uses `loadTimestamp` from temp-quiz-data.json to detect new files and reset state
   - Disables played topics until app restart or new quiz file loaded
-  - Hash generation uses stringified topic name/question/answer
+  - Stores timestamp in `localStorage.quizLoadTimestamp` for comparison
 
 #### 2. Pair Quiz (`/pairquiz/`)
 - **Format**: Array of objects with `left` and `right` properties
@@ -73,6 +86,7 @@ All quiz types are in subdirectories with their own HTML/CSS/JS files:
   - Matched items become invisible but maintain layout (`visibility: hidden`)
   - Game completes when all valid pairs are matched
 - **Result Screen**: Shows all correct pairs and highlights extra item in red
+- **Completion**: Sends `quiz-completed` IPC to advance playlist
 
 #### 3. Sort Quiz (`/sortquiz/`)
 - **Format**: Object with `upperLabel`, `lowerLabel`, and `items` array (2-11 strings)
@@ -87,6 +101,7 @@ All quiz types are in subdirectories with their own HTML/CSS/JS files:
   - Dynamic graph rebuilds after each placement using `rebuildSortedArray()`: maintains spots between all items
   - Dynamic scaling reduces font/spacing when many items present (`applyCenterGraphScaling()`)
 - **Center Column**: Vertical graph with connectors between items
+- **Completion**: Sends `quiz-completed` IPC to advance playlist
 
 #### 4. Image Quiz (`/imagequiz/`)
 - **Format**: Array of objects with `image` (filename) and `answer` properties
@@ -97,6 +112,15 @@ All quiz types are in subdirectories with their own HTML/CSS/JS files:
   - After all images shown, shows each image with answer (results phase)
   - Returns to main menu after final image+answer shown
 - **Image Paths**: Resolved relative to `.imagequiz` file directory using `temp-original-path.txt`
+- **Completion**: Sends `quiz-completed` IPC to advance playlist
+
+#### 5. Title Quiz (`/titlequiz/`)
+- **Format**: Object with `title` (required) and `subtitle` (optional) properties
+- **Extension**: `.title`
+- **File**: `title.html` (single page)
+- **Display**: Shows title prominently with optional subtitle above
+- **Navigation**: Press Enter to proceed
+- **Completion**: Sends `quiz-completed` IPC to advance playlist
 
 ### Common Patterns
 
@@ -106,10 +130,20 @@ All quiz types read from `temp-quiz-data.json` created by MenuController:
 const fs = require('fs');
 const path = require('path');
 const tempFilePath = path.join(__dirname, '..', 'temp-quiz-data.json');
-const quizData = JSON.parse(fs.readFileSync(tempFilePath, 'utf8'));
+const rawData = fs.readFileSync(tempFilePath, 'utf8');
+const data = JSON.parse(rawData);
+const quizData = data.quizData || data; // Handle wrapped or unwrapped format
+const loadTimestamp = data.loadTimestamp; // Optional timestamp for file reload detection
 ```
 
-**Return to Main:**
+**Quiz Completion:**
+Send `quiz-completed` IPC event to advance playlist or return to main:
+```javascript
+const { ipcRenderer } = require('electron');
+ipcRenderer.send('quiz-completed');
+```
+
+**Return to Main (legacy):**
 ```javascript
 const { ipcRenderer } = require('electron');
 ipcRenderer.send('show-main-page');
@@ -128,12 +162,21 @@ if (typeof soundManager !== 'undefined') {
 ```
 /
 ├── main.js                    # Electron main process
-├── menu.js                    # MenuController + QuizFileHandler - file loading and validation
+├── menu.js                    # MenuController + QuizFileHandler - file/folder loading and validation
 ├── renderer.js                # Main page controller
 ├── sound-manager.js           # Global sound system
 ├── index.html                 # Main menu page
 ├── css/main.css              # Shared styles
 ├── sound-effects/            # Audio files
+├── shared/                   # Shared utilities and services
+│   ├── utils.js              # Array shuffling, hashing, Electron helpers
+│   ├── storage-service.js    # Storage abstractions
+│   ├── sound-service.js      # Sound wrapper
+│   └── error-handler.js      # Error handling
+├── validators/               # Quiz validation modules
+│   ├── validator-factory.js  # Factory for validators
+│   ├── base-validator.js     # Base validation
+│   └── *-validator.js        # Per-quiz-type validators
 ├── topicquiz/                # Topic quiz (16 topics, grid navigation)
 │   ├── topic.html/css/js     # Grid selector (TopicController)
 │   ├── question.html/css/js  # Question display
@@ -142,17 +185,21 @@ if (typeof soundManager !== 'undefined') {
 │   └── pair.html/css/js      # Single page with three columns (PairController)
 ├── sortquiz/                 # Sorting quiz
 │   └── sort.html/css/js      # Single page with vertical graph (SortController)
-└── imagequiz/                # Image identification quiz
-    └── image.html/css/js     # Single page with sequential images (ImageController)
+├── imagequiz/                # Image identification quiz
+│   └── image.html/css/js     # Single page with sequential images (ImageController)
+└── titlequiz/                # Title display screen
+    └── title.html/css/js     # Title display (TitleController)
 ```
 
 ## Key Implementation Details
 
 - All navigation is keyboard-only (arrow keys + Enter)
 - Quiz pages use `nodeIntegration: true` to access file system and IPC
-- Topic quiz persists state across page loads but resets on app restart or new file
-- Pair/Sort quizzes show results screen on game end (completion or error)
+- Topic quiz persists state across page loads but resets on app restart or new file (via timestamp comparison)
+- Pair/Sort/Image/Title quizzes send `quiz-completed` IPC on completion to support playlists
 - Sort quiz implements dynamic spot array that rebuilds after each placement
 - Image quiz requires original file path to resolve relative image paths
 - Each quiz type has a dedicated controller class that initializes on DOM load
 - Controllers manage game state, navigation, rendering, and sound effects
+- Playlist mode: File > Open Folder loads all quiz files alphabetically, plays sequentially
+- Menu shortcuts: Cmd/Ctrl+O (open file), Cmd/Ctrl+Shift+O (open folder)

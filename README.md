@@ -1,6 +1,6 @@
 # PubQuizTerminal
 
-A terminal-based pub quiz application built with Electron.
+A terminal-based pub quiz application built with Electron. Features five different quiz types with keyboard-only navigation and support for playlist mode.
 
 ## Getting Started
 
@@ -46,41 +46,219 @@ To create distributables:
 npm run dist
 ```
 
+## Usage
+
+### Loading Quizzes
+
+- **Single Quiz**: File > Open File (Cmd/Ctrl+O) to load a single quiz file
+- **Playlist Mode**: File > Open Folder (Cmd/Ctrl+Shift+O) to load all quiz files in a folder and play them sequentially
+
+### Navigation
+
+All quizzes use keyboard-only navigation:
+- **Arrow Keys**: Navigate between options
+- **Enter**: Select/Confirm
+
+## Quiz Types and Formats
+
+### 1. Topic Quiz (`.topicquiz`)
+
+A 4x4 grid of 16 topics. Players select a topic, see the question, then reveal the answer.
+
+**Format**: Array of 16 topic objects
+
+**JSON Template**:
+```json
+[
+  {
+    "name": "Topic 1",
+    "question": "What is the question?",
+    "answer": "This is the answer",
+    "falseAnswers": ["Wrong 1", "Wrong 2", "Wrong 3"]
+  },
+  {
+    "name": "Topic 2",
+    "question": "Another question?",
+    "answer": "Another answer"
+  }
+]
+```
+
+**Fields**:
+- `name` (required): Topic name displayed on grid
+- `question` (required): Question text
+- `answer` (required): Answer text
+- `falseAnswers` (optional): Array of incorrect answers
+
+**Rules**:
+- Must have exactly 16 topics
+- Topics are disabled after being played until app restart or new file loaded
+
+---
+
+### 2. Pair Quiz (`.pairquiz`)
+
+Match pairs of items. Players select an item from the left column, then match it with the correct item from the right column.
+
+**Format**: Array of pair objects
+
+**JSON Template**:
+```json
+[
+  {
+    "left": "Item A",
+    "right": "Match A"
+  },
+  {
+    "left": "Item B",
+    "right": "Match B"
+  },
+  {
+    "left": "Item C",
+    "right": "Match C"
+  },
+  {
+    "left": "",
+    "right": "Extra Item"
+  }
+]
+```
+
+**Fields**:
+- `left`: Left column item (empty string for extra items)
+- `right`: Right column item
+
+**Rules**:
+- Must have 1-10 valid pairs (both left and right non-empty)
+- Max 1 extra item (empty left, non-empty right)
+- Total items: 1-11
+- Wrong match or selecting extra item ends the game
+
+---
+
+### 3. Sort Quiz (`.sortquiz`)
+
+Sort items in order between two labels. Players place items one by one in ascending order.
+
+**Format**: Object with labels and items array
+
+**JSON Template**:
+```json
+{
+  "upperLabel": "Earliest",
+  "lowerLabel": "Latest",
+  "items": [
+    "First item",
+    "Second item",
+    "Third item",
+    "Fourth item",
+    "Fifth item"
+  ]
+}
+```
+
+**Fields**:
+- `upperLabel` (required): Label for top of scale
+- `lowerLabel` (required): Label for bottom of scale
+- `items` (required): Array of 2-11 strings to sort
+
+**Rules**:
+- Items must be placed in their original array order
+- Wrong placement ends the game
+- One item starts in center, others split between left/right columns
+
+---
+
+### 4. Image Quiz (`.imagequiz`)
+
+Display images sequentially. Players progress through images, then see each image with its answer.
+
+**Format**: Array of image objects
+
+**JSON Template**:
+```json
+[
+  {
+    "image": "image1.jpg",
+    "answer": "Answer for image 1"
+  },
+  {
+    "image": "subfolder/image2.png",
+    "answer": "Answer for image 2"
+  },
+  {
+    "image": "image3.gif",
+    "answer": "Answer for image 3"
+  }
+]
+```
+
+**Fields**:
+- `image` (required): Image filename (relative to quiz file location)
+- `answer` (required): Answer text
+
+**Rules**:
+- Must have at least 1 item
+- Image paths are resolved relative to the `.imagequiz` file location
+- Supports standard image formats (jpg, png, gif, etc.)
+
+---
+
+### 5. Title Quiz (`.title`)
+
+Display a title screen with optional subtitle. Useful for section dividers in playlists.
+
+**Format**: Object with title and optional subtitle
+
+**JSON Template**:
+```json
+{
+  "title": "Main Title Text",
+  "subtitle": "Optional subtitle text"
+}
+```
+
+**Fields**:
+- `title` (required): Main title text
+- `subtitle` (optional): Subtitle displayed above title
+
+**Rules**:
+- Title cannot be empty
+- Press Enter to proceed to next quiz in playlist
+
+---
+
 ## Project Structure
 
 ```
 PubQuizTerminal/
-├── main.js          # Main Electron process
-├── index.html       # Main application window
-├── styles.css       # Application styling
-├── renderer.js      # Renderer process logic
-├── package.json     # Project configuration and dependencies
-└── README.md        # This file
+├── main.js              # Electron main process
+├── menu.js              # File/folder loading and validation
+├── renderer.js          # Main menu logic
+├── sound-manager.js     # Global sound effects
+├── index.html           # Main menu
+├── css/                 # Stylesheets
+├── sound-effects/       # Audio files
+├── shared/              # Shared utilities
+├── validators/          # Quiz validation
+├── topicquiz/           # Topic quiz implementation
+├── pairquiz/            # Pair quiz implementation
+├── sortquiz/            # Sort quiz implementation
+├── imagequiz/           # Image quiz implementation
+└── titlequiz/           # Title screen implementation
 ```
 
 ## Features
 
-- Modern, responsive UI with a terminal-like interface
-- Cross-platform support (Windows, macOS, Linux)
-- Keyboard shortcuts for common actions
-- Extensible architecture for quiz functionality
+- **Keyboard-only navigation** for accessibility
+- **Playlist mode** for running multiple quizzes sequentially
+- **State persistence** for topic quiz (tracks played topics)
+- **Sound effects** for game events
+- **Cross-platform** support (Windows, macOS, Linux)
 
-## Development
+## Example Quiz Files
 
-The application is structured with:
-- **Main Process** (`main.js`): Handles window creation, menu setup, and app lifecycle
-- **Renderer Process** (`renderer.js`): Handles UI interactions and business logic
-- **Styling** (`styles.css`): Modern CSS with gradients and responsive design
-
-## Future Enhancements
-
-This is a basic Electron application template. Consider adding:
-- Quiz creation and management
-- Question database
-- Scoring system
-- Multiplayer support
-- Quiz templates
-- Import/export functionality
+Sample quiz files are included in each quiz type's subdirectory for reference.
 
 ## License
 
