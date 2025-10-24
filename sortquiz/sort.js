@@ -90,8 +90,18 @@ class SortController {
         const shuffledItems = [...this.sortData.items];
         this.shuffleArray(shuffledItems);
         
-        // Place 1 item randomly in center
-        const centerItemIndex = Math.floor(Math.random() * shuffledItems.length);
+        // Place 1 item in center - use starterItemIndex if provided, otherwise random
+        let centerItemIndex;
+        if (this.sortData.starterItemIndex !== undefined && 
+            this.sortData.starterItemIndex >= 0 && 
+            this.sortData.starterItemIndex < this.sortData.items.length) {
+            // Use the specified starter item index
+            const starterItem = this.sortData.items[this.sortData.starterItemIndex];
+            centerItemIndex = shuffledItems.indexOf(starterItem);
+        } else {
+            // Fallback to random selection
+            centerItemIndex = Math.floor(Math.random() * shuffledItems.length);
+        }
         const centerItem = shuffledItems.splice(centerItemIndex, 1)[0];
         
         // Split remaining items between left and right (5 each)

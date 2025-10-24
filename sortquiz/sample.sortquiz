@@ -1,6 +1,7 @@
 {
   "upperLabel": "Hottest",
   "lowerLabel": "Coldest",
+  "starterItemIndex": 4,
   "items": [
     "Sun",
     "Fire",

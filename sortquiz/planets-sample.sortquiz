@@ -1,6 +1,7 @@
 {
   "upperLabel": "Closest to Sun",
   "lowerLabel": "Farthest from Sun",
+  "starterItemIndex": 2,
   "items": [
     "Mercury",
     "Venus",
