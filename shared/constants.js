@@ -41,6 +41,11 @@ export const QUIZ_TYPES = {
     extension: '.imagequiz',
     path: 'imagequiz/image.html',
     name: 'Image Quiz'
+  },
+  IMAGE_MUTATION: {
+    extension: '.imagemutationquiz',
+    path: 'imagemutationquiz/imagemutation.html',
+    name: 'Image Mutation Quiz'
   }
 };
 

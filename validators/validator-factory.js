@@ -2,6 +2,7 @@ import { TopicQuizValidator } from './topic-quiz-validator.js';
 import { PairQuizValidator } from './pair-quiz-validator.js';
 import { SortQuizValidator } from './sort-quiz-validator.js';
 import { ImageQuizValidator } from './image-quiz-validator.js';
+import { ImageMutationQuizValidator } from './image-mutation-quiz-validator.js';
 import { QUIZ_TYPES } from '../shared/constants.js';
 
 export class ValidatorFactory {
@@ -15,6 +16,8 @@ export class ValidatorFactory {
         return new SortQuizValidator();
       case QUIZ_TYPES.IMAGE.extension:
         return new ImageQuizValidator();
+      case QUIZ_TYPES.IMAGE_MUTATION.extension:
+        return new ImageMutationQuizValidator();
       default:
         return null;
     }

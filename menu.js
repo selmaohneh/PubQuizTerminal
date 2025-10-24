@@ -7,6 +7,7 @@ const QUIZ_TYPES = {
   PAIR: { extension: '.pairquiz', path: 'pairquiz/pair.html' },
   SORT: { extension: '.sortquiz', path: 'sortquiz/sort.html' },
   IMAGE: { extension: '.imagequiz', path: 'imagequiz/image.html' },
+  IMAGE_MUTATION: { extension: '.imagemutationquiz', path: 'imagemutationquiz/imagemutation.html' },
   TITLE: { extension: '.title', path: 'titlequiz/title.html' }
 };
 
@@ -108,11 +109,12 @@ class QuizFileHandler {
       properties: ['openFile'],
       title: 'Select Quiz File',
       filters: [
-        { name: 'Quiz Files', extensions: ['topicquiz', 'pairquiz', 'sortquiz', 'imagequiz', 'title'] },
+        { name: 'Quiz Files', extensions: ['topicquiz', 'pairquiz', 'sortquiz', 'imagequiz', 'imagemutationquiz', 'title'] },
         { name: 'Topic Quiz Files', extensions: ['topicquiz'] },
         { name: 'Pair Quiz Files', extensions: ['pairquiz'] },
         { name: 'Sort Quiz Files', extensions: ['sortquiz'] },
         { name: 'Image Quiz Files', extensions: ['imagequiz'] },
+        { name: 'Image Mutation Quiz Files', extensions: ['imagemutationquiz'] },
         { name: 'Title Files', extensions: ['title'] },
         { name: 'All Files', extensions: ['*'] }
       ]
@@ -160,6 +162,7 @@ class QuizFileHandler {
       [QUIZ_TYPES.PAIR.extension]: this.validatePairQuiz.bind(this),
       [QUIZ_TYPES.SORT.extension]: this.validateSortQuiz.bind(this),
       [QUIZ_TYPES.IMAGE.extension]: this.validateImageQuiz.bind(this),
+      [QUIZ_TYPES.IMAGE_MUTATION.extension]: this.validateImageMutationQuiz.bind(this),
       [QUIZ_TYPES.TITLE.extension]: this.validateTitleQuiz.bind(this)
     };
 
@@ -254,6 +257,28 @@ class QuizFileHandler {
     return { isValid: true };
   }
 
+  validateImageMutationQuiz(data) {
+    if (!Array.isArray(data) || data.length < 1) {
+      return { isValid: false, errors: ['Image mutation quiz must have at least 1 item'] };
+    }
+
+    for (const item of data) {
+      if (!item.mutatedImage || !item.originalImage) {
+        return { isValid: false, errors: ['Each item must have mutatedImage and originalImage'] };
+      }
+
+      if (typeof item.mutatedImage !== 'string' || typeof item.originalImage !== 'string') {
+        return { isValid: false, errors: ['Images must be strings'] };
+      }
+
+      if (item.mutatedImage.trim() === '' || item.originalImage.trim() === '') {
+        return { isValid: false, errors: ['Images cannot be empty'] };
+      }
+    }
+
+    return { isValid: true };
+  }
+
   validateTitleQuiz(data) {
     if (!data || typeof data !== 'object') {
       return { isValid: false, errors: ['Title quiz must be an object'] };
@@ -278,7 +303,7 @@ class QuizFileHandler {
     };
     fs.writeFileSync(tempFilePath, JSON.stringify(dataToSave));
 
-    if (fileExtension === QUIZ_TYPES.IMAGE.extension) {
+    if (fileExtension === QUIZ_TYPES.IMAGE.extension || fileExtension === QUIZ_TYPES.IMAGE_MUTATION.extension) {
       const originalPathFile = path.join(__dirname, STORAGE_FILES.TEMP_ORIGINAL_PATH);
       fs.writeFileSync(originalPathFile, filePath);
     }
