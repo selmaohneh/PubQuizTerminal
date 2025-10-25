@@ -180,6 +180,10 @@ class TopicController {
                 event.preventDefault();
                 this.selectCurrentTopic();
                 break;
+            case 'Escape':
+                event.preventDefault();
+                this.exitQuiz();
+                break;
         }
     }
 
@@ -247,6 +251,31 @@ class TopicController {
         
         // Navigate to question view (sound will play when question loads)
         window.location.href = `question.html?topic=${topicId}&q=0`;
+    }
+
+    exitQuiz() {
+        // Clear quiz-related data
+        localStorage.removeItem('currentQuizData');
+        localStorage.removeItem('playedTopics');
+        localStorage.removeItem('selectedTopic');
+        localStorage.removeItem('selectedTopicName');
+        localStorage.removeItem('questionIndex');
+        localStorage.removeItem('currentAnswer');
+        localStorage.removeItem('currentQuestion');
+        localStorage.removeItem('currentTopic');
+        localStorage.removeItem('quizDataHash');
+        localStorage.removeItem('quizLoadTimestamp');
+        sessionStorage.removeItem('quizSessionActive');
+        
+        // Send IPC message to signal quiz completion
+        // This will either return to main menu or load next quiz in playlist
+        if (typeof require !== 'undefined') {
+            const { ipcRenderer } = require('electron');
+            ipcRenderer.send('quiz-completed');
+        } else {
+            // Fallback for browser testing
+            window.location.href = '../index.html';
+        }
     }
 
 }
