@@ -184,55 +184,33 @@ class TopicController {
     }
 
     navigateUp() {
-        // Move up one row (4 positions back), jumping over disabled topics
-        let targetIndex = this.currentSelectedIndex;
-        while (targetIndex >= 4) {
-            targetIndex -= 4;
-            if (!this.topicCards[targetIndex].classList.contains('disabled')) {
-                this.selectTopicByIndex(targetIndex);
-                return;
-            }
+        // Move up one row (4 positions back)
+        const targetIndex = this.currentSelectedIndex - 4;
+        if (targetIndex >= 0) {
+            this.selectTopicByIndex(targetIndex);
         }
-        // If no available topic found in direction, stay put
     }
 
     navigateDown() {
-        // Move down one row (4 positions forward), jumping over disabled topics
-        let targetIndex = this.currentSelectedIndex;
-        while (targetIndex < 12) {
-            targetIndex += 4;
-            if (!this.topicCards[targetIndex].classList.contains('disabled')) {
-                this.selectTopicByIndex(targetIndex);
-                return;
-            }
+        // Move down one row (4 positions forward)
+        const targetIndex = this.currentSelectedIndex + 4;
+        if (targetIndex < this.topicCards.length) {
+            this.selectTopicByIndex(targetIndex);
         }
-        // If no available topic found in direction, stay put
     }
 
     navigateLeft() {
-        // Move left within the same row, jumping over disabled topics
-        let targetIndex = this.currentSelectedIndex;
-        while (targetIndex % 4 !== 0) {
-            targetIndex -= 1;
-            if (!this.topicCards[targetIndex].classList.contains('disabled')) {
-                this.selectTopicByIndex(targetIndex);
-                return;
-            }
+        // Move left within the same row
+        if (this.currentSelectedIndex % 4 !== 0) {
+            this.selectTopicByIndex(this.currentSelectedIndex - 1);
         }
-        // If no available topic found in direction, stay put
     }
 
     navigateRight() {
-        // Move right within the same row, jumping over disabled topics
-        let targetIndex = this.currentSelectedIndex;
-        while (targetIndex % 4 !== 3) {
-            targetIndex += 1;
-            if (!this.topicCards[targetIndex].classList.contains('disabled')) {
-                this.selectTopicByIndex(targetIndex);
-                return;
-            }
+        // Move right within the same row
+        if (this.currentSelectedIndex % 4 !== 3 && this.currentSelectedIndex < this.topicCards.length - 1) {
+            this.selectTopicByIndex(this.currentSelectedIndex + 1);
         }
-        // If no available topic found in direction, stay put
     }
 
 

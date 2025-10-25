@@ -100,19 +100,30 @@ html, body {
     font-weight: 500;
 }
 
-.topic-card.disabled:hover,
-.topic-card.disabled.selected {
+.topic-card.disabled:hover {
     background: transparent;
     border-color: #666666;
     box-shadow: none;
     transform: none;
 }
 
-.topic-card.disabled:hover .topic-title,
-.topic-card.disabled.selected .topic-title {
+.topic-card.disabled.selected {
+    background: rgba(255, 215, 0, 0.08);
+    border-color: rgba(255, 215, 0, 0.4);
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
+    transform: scale(1.05);
+}
+
+.topic-card.disabled:hover .topic-title {
     color: #666666;
     text-shadow: none;
     font-weight: 500;
+}
+
+.topic-card.disabled.selected .topic-title {
+    color: rgba(255, 215, 0, 0.5);
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+    font-weight: 700;
 }
 
 /* Responsive design for different screen sizes */
