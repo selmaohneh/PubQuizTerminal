@@ -38,3 +38,8 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.temp
+
+# Test artifacts
+test-results/
+playwright-report/
+tests/screenshots/
