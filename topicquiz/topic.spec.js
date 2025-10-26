@@ -290,5 +290,197 @@ test.describe.serial('Topic Quiz', () => {
       fs.unlinkSync(tempFilePath);
     }
   });
+
+  test('should disable topics after playing and prevent re-selection', async () => {
+    const fs = require('fs');
+    
+    // Wait for the page to load
+    await window.waitForLoadState('load');
+
+    // Read the test topic quiz file
+    const testFilePath = path.join(__dirname, 'test-topic.topicquiz');
+    const quizData = JSON.parse(fs.readFileSync(testFilePath, 'utf8'));
+
+    // Create temp-quiz-data.json with the quiz data
+    const tempFilePath = path.join(__dirname, '..', 'temp-quiz-data.json');
+    const dataToSave = {
+      quizData: quizData,
+      loadTimestamp: Date.now()
+    };
+    fs.writeFileSync(tempFilePath, JSON.stringify(dataToSave));
+
+    // Navigate to topic quiz page
+    await window.evaluate(() => {
+      window.location.href = 'topicquiz/topic.html';
+    });
+
+    // Wait for topic page to load
+    await window.waitForLoadState('load');
+    await window.waitForSelector('.topic-card');
+
+    // Get the first topic card (Geography)
+    const firstTopicCard = window.locator('.topic-card').first();
+    
+    // Verify the first topic is NOT disabled initially
+    await expect(firstTopicCard).not.toHaveClass(/disabled/);
+
+    // Select the first topic (already selected by default, just press Enter)
+    await window.keyboard.press('Enter');
+
+    // Wait for question page to load
+    await window.waitForLoadState('load');
+
+    // Verify we're on the question page
+    const questionText = window.locator('#question-text');
+    await expect(questionText).toBeVisible();
+
+    // Press Enter to go to answer view
+    await window.keyboard.press('Enter');
+    await window.waitForLoadState('load');
+
+    // Verify we're on the answer page
+    const answerElement = window.locator('#answer-text');
+    await expect(answerElement).toBeVisible();
+
+    // Press Enter to return to topic overview
+    await window.keyboard.press('Enter');
+    await window.waitForLoadState('load');
+    await window.waitForSelector('.topic-card');
+
+    // Verify we're back on the topic overview
+    const topicCards = window.locator('.topic-card');
+    await expect(topicCards.first()).toBeVisible();
+
+    // Verify the first topic is NOW disabled
+    const firstTopicCardAfter = window.locator('.topic-card').first();
+    await expect(firstTopicCardAfter).toHaveClass(/disabled/);
+
+    // Take a screenshot showing the disabled topic
+    await window.screenshot({ path: 'topicquiz/screenshots/topic-disabled.png' });
+
+    // The selection should have moved to the next available topic (index 1)
+    // Navigate back to the first (disabled) topic
+    await window.keyboard.press('ArrowLeft');
+
+    // Verify the disabled topic is now selected (can be selected, but not activated)
+    const selectedCard = window.locator('.topic-card.selected');
+    await expect(selectedCard).toHaveClass(/disabled/);
+
+    // Try to press Enter on the disabled topic
+    await window.keyboard.press('Enter');
+
+    // Wait a moment to ensure no navigation happens
+    await window.waitForTimeout(500);
+
+    // Verify we're STILL on the topic overview page (not navigated to question)
+    await expect(topicCards.first()).toBeVisible();
+    
+    // Verify we didn't navigate away by checking the URL
+    const currentUrl = await window.evaluate(() => window.location.href);
+    expect(currentUrl).toContain('topic.html');
+    expect(currentUrl).not.toContain('question.html');
+
+    // Take a screenshot showing attempt to select disabled topic had no effect
+    await window.screenshot({ path: 'topicquiz/screenshots/topic-disabled-no-effect.png' });
+
+    // Clean up temp file
+    if (fs.existsSync(tempFilePath)) {
+      fs.unlinkSync(tempFilePath);
+    }
+  });
+
+  test('should play through all 16 topics and return to main view after last topic', async () => {
+    const fs = require('fs');
+    
+    // Wait for the page to load
+    await window.waitForLoadState('load');
+
+    // Read the test topic quiz file
+    const testFilePath = path.join(__dirname, 'test-topic.topicquiz');
+    const quizData = JSON.parse(fs.readFileSync(testFilePath, 'utf8'));
+
+    // Create temp-quiz-data.json with the quiz data
+    const tempFilePath = path.join(__dirname, '..', 'temp-quiz-data.json');
+    const dataToSave = {
+      quizData: quizData,
+      loadTimestamp: Date.now()
+    };
+    fs.writeFileSync(tempFilePath, JSON.stringify(dataToSave));
+
+    // Navigate to topic quiz page
+    await window.evaluate(() => {
+      window.location.href = 'topicquiz/topic.html';
+    });
+
+    // Wait for topic page to load
+    await window.waitForLoadState('load');
+    await window.waitForSelector('.topic-card');
+
+    // Play through all 16 topics
+    for (let topicIndex = 0; topicIndex < 16; topicIndex++) {
+      console.log(`Playing topic ${topicIndex + 1}/16`);
+
+      // The first available (non-disabled) topic is always auto-selected
+      // Just press Enter to select it
+      await window.keyboard.press('Enter');
+
+      // Wait for question page to load
+      await window.waitForLoadState('load');
+
+      // Verify we're on the question page
+      const questionText = window.locator('#question-text');
+      await expect(questionText).toBeVisible();
+
+      // Press Enter to go to answer view
+      await window.keyboard.press('Enter');
+      await window.waitForLoadState('load');
+
+      // Verify we're on the answer page
+      const answerElement = window.locator('#answer-text');
+      await expect(answerElement).toBeVisible();
+
+      // Press Enter to continue
+      await window.keyboard.press('Enter');
+      await window.waitForLoadState('load');
+
+      if (topicIndex < 15) {
+        // Not the last topic - should return to topic overview
+        await window.waitForSelector('.topic-card');
+        
+        // Verify we're still on the topic overview
+        const topicCards = window.locator('.topic-card');
+        await expect(topicCards.first()).toBeVisible();
+
+        // Verify the URL contains topic.html
+        const currentUrl = await window.evaluate(() => window.location.href);
+        expect(currentUrl).toContain('topic.html');
+
+        // Count disabled topics - should be topicIndex + 1
+        const disabledCount = await window.locator('.topic-card.disabled').count();
+        expect(disabledCount).toBe(topicIndex + 1);
+      } else {
+        // Last topic (index 15) - should return to main view
+        
+        // Wait for main page to load
+        await window.waitForSelector('img.icon');
+
+        // Verify we're on the main page (icon is visible)
+        const icon = window.locator('img.icon');
+        await expect(icon).toBeVisible();
+
+        // Verify the URL contains index.html
+        const currentUrl = await window.evaluate(() => window.location.href);
+        expect(currentUrl).toContain('index.html');
+
+        // Take a screenshot of the main view
+        await window.screenshot({ path: 'topicquiz/screenshots/all-topics-complete-main-view.png' });
+      }
+    }
+
+    // Clean up temp file
+    if (fs.existsSync(tempFilePath)) {
+      fs.unlinkSync(tempFilePath);
+    }
+  });
 });
 
