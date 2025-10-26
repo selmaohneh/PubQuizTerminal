@@ -1,0 +1,83 @@
+[
+  {
+    "name": "Geography",
+    "question": "What is the capital of France?",
+    "answer": "Paris"
+  },
+  {
+    "name": "History",
+    "question": "In which year did World War II end?",
+    "answer": "1945"
+  },
+  {
+    "name": "Science",
+    "question": "What is the chemical symbol for gold?",
+    "answer": "Au"
+  },
+  {
+    "name": "Sports",
+    "question": "How many players are on a soccer team?",
+    "answer": "11"
+  },
+  {
+    "name": "Movies",
+    "question": "Who directed the film 'Inception'?",
+    "answer": "Christopher Nolan"
+  },
+  {
+    "name": "Music",
+    "question": "Which band released the album 'Abbey Road'?",
+    "answer": "The Beatles"
+  },
+  {
+    "name": "Literature",
+    "question": "Who wrote 'Romeo and Juliet'?",
+    "answer": "William Shakespeare"
+  },
+  {
+    "name": "Art",
+    "question": "Who painted the Mona Lisa?",
+    "answer": "Leonardo da Vinci"
+  },
+  {
+    "name": "Technology",
+    "question": "What does CPU stand for?",
+    "answer": "Central Processing Unit"
+  },
+  {
+    "name": "Food & Drink",
+    "question": "What is the main ingredient in guacamole?",
+    "answer": "Avocado"
+  },
+  {
+    "name": "Nature",
+    "question": "What is the largest species of bear?",
+    "answer": "Polar bear"
+  },
+  {
+    "name": "Politics",
+    "question": "How many members are in the UN Security Council?",
+    "answer": "15"
+  },
+  {
+    "name": "Fashion",
+    "question": "Which French designer created the little black dress?",
+    "answer": "Coco Chanel"
+  },
+  {
+    "name": "Travel",
+    "question": "Which country has the most UNESCO World Heritage Sites?",
+    "answer": "Italy"
+  },
+  {
+    "name": "Games",
+    "question": "In chess, which piece can only move diagonally?",
+    "answer": "Bishop"
+  },
+  {
+    "name": "Miscellaneous",
+    "question": "What is the speed of light in vacuum?",
+    "answer": "299,792,458 meters per second"
+  }
+]
+

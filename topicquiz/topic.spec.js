@@ -2,7 +2,7 @@ const { test, expect } = require('@playwright/test');
 const { _electron: electron } = require('playwright');
 const path = require('path');
 
-test.describe.serial('Title Quiz', () => {
+test.describe.serial('Topic Quiz', () => {
   let electronApp;
   let window;
 
@@ -24,7 +24,7 @@ test.describe.serial('Title Quiz', () => {
     await electronApp.close();
   });
 
-  test('should load title quiz, display title and subtitle, then return to main menu on Enter', async () => {
+  test('should load topic quiz, display all 16 topics, then return to main menu on Escape', async () => {
     const fs = require('fs');
     
     // Wait for the page to load
@@ -34,8 +34,8 @@ test.describe.serial('Title Quiz', () => {
     const icon = window.locator('img.icon');
     await expect(icon).toBeVisible();
 
-    // Read the test title quiz file
-    const testFilePath = path.join(__dirname, 'test-title.title');
+    // Read the test topic quiz file
+    const testFilePath = path.join(__dirname, 'test-topic.topicquiz');
     const quizData = JSON.parse(fs.readFileSync(testFilePath, 'utf8'));
 
     // Create temp-quiz-data.json with the quiz data
@@ -46,28 +46,44 @@ test.describe.serial('Title Quiz', () => {
     };
     fs.writeFileSync(tempFilePath, JSON.stringify(dataToSave));
 
-    // Navigate to title quiz page
+    // Navigate to topic quiz page
     await window.evaluate(() => {
-      window.location.href = 'titlequiz/title.html';
+      window.location.href = 'topicquiz/topic.html';
     });
 
-    // Wait for title page to load
+    // Wait for topic page to load
     await window.waitForLoadState('load');
 
-    // Wait for the title text to be populated (ensures JS has loaded the data)
-    const titleText = window.locator('#titleText');
-    await expect(titleText).toHaveText('Geography and Nature', { timeout: 10000 });
+    // Wait for topic cards to be rendered
+    await window.waitForSelector('.topic-card');
 
-    // Verify subtitle is displayed correctly
-    const subtitleText = window.locator('#subtitleText');
-    await expect(subtitleText).toBeVisible();
-    await expect(subtitleText).toHaveText('Round 3');
+    // Verify all 16 topic cards are visible
+    const topicCards = window.locator('.topic-card');
+    await expect(topicCards).toHaveCount(16);
 
-    // Take a screenshot of the title quiz
-    await window.screenshot({ path: 'titlequiz/screenshots/title-quiz-display.png' });
+    // Verify each topic name is displayed correctly
+    const expectedTopics = [
+      'Geography', 'History', 'Science', 'Sports',
+      'Movies', 'Music', 'Literature', 'Art',
+      'Technology', 'Food & Drink', 'Nature', 'Politics',
+      'Fashion', 'Travel', 'Games', 'Miscellaneous'
+    ];
 
-    // Press Enter key to return to main menu
-    await window.keyboard.press('Enter');
+    for (let i = 0; i < expectedTopics.length; i++) {
+      const topicCard = topicCards.nth(i);
+      const topicTitle = topicCard.locator('.topic-title');
+      await expect(topicTitle).toHaveText(expectedTopics[i]);
+    }
+
+    // Verify first topic is selected by default
+    const firstCard = topicCards.first();
+    await expect(firstCard).toHaveClass(/selected/);
+
+    // Take a screenshot of the topic overview
+    await window.screenshot({ path: 'topicquiz/screenshots/topic-overview.png' });
+
+    // Press Escape key to return to main menu
+    await window.keyboard.press('Escape');
 
     // Wait for navigation back to main page
     await window.waitForLoadState('load');
