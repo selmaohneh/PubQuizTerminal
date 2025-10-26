@@ -79,9 +79,6 @@ test.describe.serial('Topic Quiz', () => {
     const firstCard = topicCards.first();
     await expect(firstCard).toHaveClass(/selected/);
 
-    // Take a screenshot of the topic overview
-    await window.screenshot({ path: 'topicquiz/screenshots/topic-overview.png' });
-
     // Press Escape key to return to main menu
     await window.keyboard.press('Escape');
 
@@ -252,11 +249,6 @@ test.describe.serial('Topic Quiz', () => {
         }
       }
 
-      // Take a screenshot of the question
-      await window.screenshot({ 
-        path: `topicquiz/screenshots/question-${testCase.expectedAnswerCount}-options.png` 
-      });
-
       // Press Enter to go to answer view
       await window.keyboard.press('Enter');
       await window.waitForLoadState('load');
@@ -264,11 +256,6 @@ test.describe.serial('Topic Quiz', () => {
       // Verify we're on the answer page and the answer is shown
       const answerElement = window.locator('#answer-text');
       await expect(answerElement).toBeVisible();
-
-      // Take a screenshot of the answer
-      await window.screenshot({ 
-        path: `topicquiz/screenshots/answer-${testCase.expectedAnswerCount}-options.png` 
-      });
 
       // Press Enter to return to topic overview
       await window.keyboard.press('Enter');
@@ -355,9 +342,6 @@ test.describe.serial('Topic Quiz', () => {
     const firstTopicCardAfter = window.locator('.topic-card').first();
     await expect(firstTopicCardAfter).toHaveClass(/disabled/);
 
-    // Take a screenshot showing the disabled topic
-    await window.screenshot({ path: 'topicquiz/screenshots/topic-disabled.png' });
-
     // The selection should have moved to the next available topic (index 1)
     // Navigate back to the first (disabled) topic
     await window.keyboard.press('ArrowLeft');
@@ -379,9 +363,6 @@ test.describe.serial('Topic Quiz', () => {
     const currentUrl = await window.evaluate(() => window.location.href);
     expect(currentUrl).toContain('topic.html');
     expect(currentUrl).not.toContain('question.html');
-
-    // Take a screenshot showing attempt to select disabled topic had no effect
-    await window.screenshot({ path: 'topicquiz/screenshots/topic-disabled-no-effect.png' });
 
     // Clean up temp file
     if (fs.existsSync(tempFilePath)) {
@@ -471,9 +452,6 @@ test.describe.serial('Topic Quiz', () => {
         // Verify the URL contains index.html
         const currentUrl = await window.evaluate(() => window.location.href);
         expect(currentUrl).toContain('index.html');
-
-        // Take a screenshot of the main view
-        await window.screenshot({ path: 'topicquiz/screenshots/all-topics-complete-main-view.png' });
       }
     }
 

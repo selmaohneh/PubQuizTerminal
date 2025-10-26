@@ -63,9 +63,6 @@ test.describe.serial('Title Quiz', () => {
     await expect(subtitleText).toBeVisible();
     await expect(subtitleText).toHaveText('Round 3');
 
-    // Take a screenshot of the title quiz
-    await window.screenshot({ path: 'titlequiz/screenshots/title-quiz-display.png' });
-
     // Press Enter key to return to main menu
     await window.keyboard.press('Enter');
 
