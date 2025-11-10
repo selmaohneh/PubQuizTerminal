@@ -23,27 +23,8 @@ A terminal-based pub quiz application built with Electron. Features five differe
 
 ### Running the Application
 
-#### Development Mode
-```bash
-npm run dev
-```
-This will start the application with developer tools open.
-
-#### Production Mode
 ```bash
 npm start
-```
-
-### Building the Application
-
-To build the application for distribution:
-```bash
-npm run build
-```
-
-To create distributables:
-```bash
-npm run dist
 ```
 
 ## Usage
@@ -228,38 +209,8 @@ Display a title screen with optional subtitle. Useful for section dividers in pl
 
 ---
 
-## Project Structure
-
-```
-PubQuizTerminal/
-├── main.js              # Electron main process
-├── menu.js              # File/folder loading and validation
-├── renderer.js          # Main menu logic
-├── sound-manager.js     # Global sound effects
-├── index.html           # Main menu
-├── css/                 # Stylesheets
-├── sound-effects/       # Audio files
-├── shared/              # Shared utilities
-├── validators/          # Quiz validation
-├── topicquiz/           # Topic quiz implementation
-├── pairquiz/            # Pair quiz implementation
-├── sortquiz/            # Sort quiz implementation
-├── imagequiz/           # Image quiz implementation
-└── titlequiz/           # Title screen implementation
-```
-
-## Features
-
-- **Keyboard-only navigation** for accessibility
-- **Playlist mode** for running multiple quizzes sequentially
-- **State persistence** for topic quiz (tracks played topics)
-- **Sound effects** for game events
-- **Cross-platform** support (Windows, macOS, Linux)
-
 ## Example Quiz Files
 
 Sample quiz files are included in each quiz type's subdirectory for reference.
 
-## License
-
-MIT License
+There also is a subdirectory for the official Hopfenhirn-Quizzes.
