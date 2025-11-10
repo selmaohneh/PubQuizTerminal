@@ -1,0 +1,18 @@
+{
+  "upperLabel": "Meiste Spieler gleichzeitig",
+  "lowerLabel": "Wenigste Spieler gleichzeitig",
+  "starterItemIndex": 8,
+  "items": [
+    "Cricket",
+    "Lacrosse",
+    "Baseball",
+    "Wasserball",
+    "Handball",
+    "Eishockey",
+    "Basketball",
+    "Polo",
+    "Skat",
+    "Beachvolleyball",
+    "Golf"
+  ]
+}

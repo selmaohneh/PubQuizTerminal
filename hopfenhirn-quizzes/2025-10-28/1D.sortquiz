@@ -1,0 +1,18 @@
+{
+  "upperLabel": "Höchste Lebenserwartung",
+  "lowerLabel": "Niedrigste Lebenserwartung",
+  "starterItemIndex": 2,
+  "items": [
+    "Grönlandhai",
+    "Galapagos-Schildkröte",
+    "Home Sapiens Sapiens",
+    "Elefant",
+    "Gorilla",
+    "Pferd",
+    "Steinadler",
+    "Hauskatze",
+    "Kaninchen",
+    "Rotfuchs",
+    "Maus"
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "upperLabel": "Höchste Einwohnerzahl",
+  "lowerLabel": "Niedrigste Einwohnerzahl",
+  "starterItemIndex": 5,
+  "items": [
+    "Indonesien",
+    "Nigeria",
+    "Bangladesch",
+    "Mexiko",
+    "Vietnam",
+    "Deutschland",
+    "Frankreich",
+    "Italien",
+    "Kolumbien",
+    "Kanada",
+    "Schweden"
+  ]
+}
