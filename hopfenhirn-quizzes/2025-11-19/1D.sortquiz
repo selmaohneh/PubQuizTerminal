@@ -1,0 +1,18 @@
+{
+  "_comment": "https://www.statista.com/chart/32350/greenhouse-gas-emissions-by-mode-of-transport/",
+  "upperLabel": "Höchste CO2-Emission",
+  "lowerLabel": "Niedrigste CO2-Emission",
+  "starterItemIndex": 2,
+  "items": [
+    "Kreuzfahrtschiff",
+    "Kurzstreckenflug (Inland)",
+    "Verbrenner-Auto",
+    "Langstreckenflug",
+    "Motorrad",
+    "Bus",
+    "Plug-In Hybrid",
+    "Elektroauto",
+    "Regionalzug",
+    "ICE"
+  ]
+}

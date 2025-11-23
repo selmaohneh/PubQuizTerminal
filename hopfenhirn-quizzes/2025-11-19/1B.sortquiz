@@ -1,0 +1,17 @@
+{
+  "upperLabel": "Am schnellsten",
+  "lowerLabel": "Am langsamsten",
+  "starterItemIndex": 5,
+  "items": [
+    "Hopfenpellet-Förderschnecke",
+    "Hopfenextrakt-Dosierung",
+    "Pneumatischer Malztransport",
+    "Flaschenabfüllanlage",
+    "Whirlpool-Trubabscheidung",
+    "CO₂-Einbindung",
+    "Hefe-Sedimentation",
+    "Bierlieferung",
+    "Kaltlager-Reifung",
+    "Hopfenanbau"
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "_comment": "https://www.imdb.com/de/chart/top/",
+  "upperLabel": "Höchste Bewertung",
+  "lowerLabel": "Niedrigste Bewertung",
+  "starterItemIndex": 8,
+  "items": [
+    "Der Pate",
+    "The Dark Knight",
+    "Schindlers Liste",
+    "Pulp Fiction",
+    "Matrix",
+    "Chihiros Reise ins Zauberland",
+    "Gladiator",
+    "WALL-E",
+    "Toy Story",
+    "Stirb langsam",
+    "The Big Lebowski"
+  ]
+}

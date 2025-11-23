@@ -1,0 +1,18 @@
+{
+  "_comment": "https://de.wikipedia.org/wiki/Liste_der_L%C3%A4nder_nach_Eisenbahnnetz",
+  "upperLabel": "Größtes Netz",
+  "lowerLabel": "Kleinstes Netz",
+  "starterItemIndex": 3,
+  "items": [
+    "USA",
+    "China",
+    "Deutschland",
+    "Brasilien",
+    "Japan",
+    "Italien",
+    "Vereinigtes Königreich",
+    "Schweden",
+    "Luxemburg",
+    "Paraguay"
+  ]
+}
