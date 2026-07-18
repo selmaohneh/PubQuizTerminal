@@ -29,30 +29,36 @@ npm start
 
 ## Quiz Rooms (Web Mode)
 
-The web mode turns every player's smartphone into a quiz terminal. The quizmaster starts a server, creates a room with a random code, and players join by entering the code and a name.
+The web mode turns every player's smartphone into a quiz terminal — over the internet, no LAN required. The quizmaster creates a room with a random code, and players join by entering the code and a name. Rooms run over [Supabase Realtime](https://supabase.com/docs/guides/realtime) channels; the web app itself is fully static, so there is no server to operate.
 
-### Starting the Server
+### Hosting
+
+The app deploys to GitHub Pages automatically via `.github/workflows/deploy-pages.yml` on every push to `master` that touches `webapp/`. One-time setup: in the repository settings under **Pages**, set the source to **GitHub Actions**. The app is then live at `https://<user>.github.io/PubQuizTerminal/` (players) and `.../host.html` (quizmaster). Any other static host works too — just publish the `webapp/` folder.
+
+For local development:
 
 ```bash
-npm run server
+npm run web   # serves webapp/ on http://localhost:3000 (override with PORT)
 ```
-
-The server prints the quizmaster URL (`http://localhost:3000/host`) and the join URLs for players on the local network. Set a custom port via `PORT=1234 npm run server`.
 
 ### Quizmaster
 
-1. Open `http://localhost:3000/host` in a browser
+1. Open `host.html` in a browser
 2. Click **Raum erstellen** — a random 4-character room code is generated
 3. Load a single quiz file (**Datei öffnen**) or a whole folder as a playlist (**Ordner öffnen**), same file formats and validation as the Electron app
 4. Watch players join in real time
 
+Reloading the page restores the room (same code, players stay in). Closing the room notifies all players.
+
 ### Players
 
-1. Open the join URL on a smartphone (the room code can be pre-filled via `?code=XXXX`)
+1. Open the join page on a smartphone (the room code can be pre-filled via `?code=XXXX` — the quizmaster page shows a ready-made link)
 2. Enter the room code and a name
 3. The phone shows the waiting screen until the quizmaster starts — if the connection drops, rejoining with the same name resumes the seat
 
-Rooms live in memory only. If the quizmaster's page disconnects, the room stays open for 60 seconds so it can be reclaimed; after that, players are notified that the room is closed.
+### How it works
+
+Each room is a Supabase Realtime channel (`room-<CODE>`). The quizmaster's browser is the authority: it answers join requests, tracks who is online via presence, and broadcasts the room state. No room data touches a database — everything lives in the channel while the room is open. The Supabase project URL and publishable key are configured in `webapp/config.js`.
 
 ## Usage
 
