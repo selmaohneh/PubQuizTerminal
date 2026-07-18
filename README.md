@@ -27,6 +27,33 @@ A terminal-based pub quiz application built with Electron. Features five differe
 npm start
 ```
 
+## Quiz Rooms (Web Mode)
+
+The web mode turns every player's smartphone into a quiz terminal. The quizmaster starts a server, creates a room with a random code, and players join by entering the code and a name.
+
+### Starting the Server
+
+```bash
+npm run server
+```
+
+The server prints the quizmaster URL (`http://localhost:3000/host`) and the join URLs for players on the local network. Set a custom port via `PORT=1234 npm run server`.
+
+### Quizmaster
+
+1. Open `http://localhost:3000/host` in a browser
+2. Click **Raum erstellen** — a random 4-character room code is generated
+3. Load a single quiz file (**Datei öffnen**) or a whole folder as a playlist (**Ordner öffnen**), same file formats and validation as the Electron app
+4. Watch players join in real time
+
+### Players
+
+1. Open the join URL on a smartphone (the room code can be pre-filled via `?code=XXXX`)
+2. Enter the room code and a name
+3. The phone shows the waiting screen until the quizmaster starts — if the connection drops, rejoining with the same name resumes the seat
+
+Rooms live in memory only. If the quizmaster's page disconnects, the room stays open for 60 seconds so it can be reclaimed; after that, players are notified that the room is closed.
+
 ## Usage
 
 ### Loading Quizzes

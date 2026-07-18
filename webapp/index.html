@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PubQuizTerminal – Beitreten</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="terminal">
+    <h1>PubQuizTerminal</h1>
+    <p class="subtitle">Dein Smartphone wird zum Quiz-Terminal.</p>
+
+    <form id="join-form">
+      <label for="code">Raum-Code</label>
+      <input type="text" id="code" class="code-input" maxlength="4" autocomplete="off"
+             autocapitalize="characters" spellcheck="false" placeholder="XXXX" required>
+
+      <label for="name">Dein Name</label>
+      <input type="text" id="name" maxlength="20" autocomplete="off" spellcheck="false"
+             placeholder="Name eingeben" required>
+
+      <button type="submit" id="join-button">Beitreten</button>
+      <p class="error" id="join-error"></p>
+    </form>
+
+    <div id="waiting" class="waiting-screen hidden">
+      <h2>Verbunden mit Raum <span id="joined-code"></span></h2>
+      <p class="player-name" id="joined-name"></p>
+      <p>Warte auf den Quizmaster<span class="blink">_</span></p>
+      <h2>Spieler im Raum</h2>
+      <ul class="list" id="player-list"></ul>
+      <p class="status-line" id="status-line">verbunden</p>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="join.js"></script>
+</body>
+</html>
