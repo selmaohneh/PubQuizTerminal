@@ -42,9 +42,11 @@ Rooms run over **Supabase Realtime** channels (project `myxtvqljoufgqgikcspm`, c
 - **webapp/index.html + join.js**: Player join page (mobile-first, `JoinController`). Subscribes to the room channel, requires a host in presence (else "Raum nicht gefunden"), sends `join-request`, waits for the matching `join-response`, then tracks `{role:'player', playerId, name}`. Rejoins automatically after reload via `sessionStorage`; code can be pre-filled via `/?code=XXXX`.
 - **webapp/vendor/supabase.js**: Vendored supabase-js UMD bundle (copied from `node_modules/@supabase/supabase-js/dist/umd/supabase.js`).
 
-Broadcast events: `join-request` (player→host), `join-response` (host→players, filtered by `playerId`), `room:update` (public room state), `room:closed`. Duplicate names are rejected while the name's holder is connected; a disconnected player may rejoin under the same name.
+Broadcast events: `join-request` (player→host), `join-response` (host→players, filtered by `playerId`), `answer-submit` (player→host), `room:update` (public room state incl. `game`), `room:closed`. Duplicate names are rejected while the name's holder is connected; a disconnected player may rejoin under the same name.
 
-Room state lives only in the channel/browser while the room is open; gameplay itself is not yet implemented in the web app (first iteration = rooms + joining).
+**Gameplay — Single Question (`.question`, web-only quiz type)**: JSON `{question, answer}` (validated in `quiz-validation.js`, no Electron pendant). Host starts it from the playlist (▶ on playable types, see `PLAYABLE_EXTENSIONS` in `host.js`). State machine in `HostController.game` (`{quizIndex, phase: 'question'|'revealed', answers}`), included in `room:update` as `game` (`{phase, question, answered[], answer?, results?}`) and persisted in the host's `sessionStorage`. Players submit via `answer-submit` (identified by `playerId`, may resubmit until reveal; a rejoining player gets `yourAnswer` in the `join-response`). Reveal is gated: only allowed when every **connected** player has answered. Pre-reveal the host UI shows only who answered (projector-safe). Results compare answers via `RoomProtocol.answersMatch` (case-insensitive, trimmed, collapsed whitespace) and are shown to everyone on reveal; `endQuestion()` marks the playlist entry `played` and returns everyone to the lobby.
+
+Room state lives only in the channel/browser while the room is open. Other quiz types (topic/pair/sort/image/title) are not yet playable in the web app.
 
 ### Main Process (main.js)
 - Creates BrowserWindow with `nodeIntegration: true` and `contextIsolation: false`

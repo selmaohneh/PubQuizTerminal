@@ -27,9 +27,33 @@
     <div id="waiting" class="waiting-screen hidden">
       <h2>Verbunden mit Raum <span id="joined-code"></span></h2>
       <p class="player-name" id="joined-name"></p>
-      <p>Warte auf den Quizmaster<span class="blink">_</span></p>
-      <h2>Spieler im Raum</h2>
-      <ul class="list" id="player-list"></ul>
+
+      <div id="lobby-view">
+        <p>Warte auf den Quizmaster<span class="blink">_</span></p>
+        <h2>Spieler im Raum</h2>
+        <ul class="list" id="player-list"></ul>
+      </div>
+
+      <div id="question-view" class="hidden">
+        <h2>Frage</h2>
+        <p class="question-text" id="question-text"></p>
+
+        <form id="answer-form">
+          <label for="answer">Deine Antwort</label>
+          <input type="text" id="answer" autocomplete="off" spellcheck="false"
+                 placeholder="Antwort eingeben">
+          <button type="submit" id="answer-button">Antwort tippen</button>
+        </form>
+        <p class="empty-hint" id="answer-status-line"></p>
+
+        <div id="result-view" class="hidden">
+          <p class="own-result" id="own-result"></p>
+          <p class="question-answer" id="correct-answer"></p>
+          <h2>Alle Antworten</h2>
+          <ul class="list" id="results-list"></ul>
+        </div>
+      </div>
+
       <p class="status-line" id="status-line">verbunden</p>
     </div>
   </div>

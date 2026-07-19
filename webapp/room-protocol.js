@@ -7,8 +7,9 @@
 // Channel per room: `room-<CODE>`. Presence payloads: { role: 'host' } or
 // { role: 'player', playerId, name }. Broadcast events:
 //   join-request  (player → host): { playerId, name }
-//   join-response (host → players): { playerId, ok, error?, name?, room? }
-//   room:update   (host → players): public room state
+//   join-response (host → players): { playerId, ok, error?, name?, room?, yourAnswer? }
+//   answer-submit (player → host): { playerId, answer }
+//   room:update   (host → players): public room state (incl. `game`)
 //   room:closed   (host → players): { reason }
 (function () {
   // No easily confused characters (0/O, 1/I/L).
@@ -40,6 +41,16 @@
     return new RegExp(`^[${CODE_ALPHABET}]{${CODE_LENGTH}}$`).test(code);
   }
 
+  // Tolerant answer comparison for typed answers: case-insensitive,
+  // trimmed, collapsed whitespace.
+  function normalizeAnswer(text) {
+    return (text || '').toLowerCase().trim().replace(/\s+/g, ' ');
+  }
+
+  function answersMatch(given, expected) {
+    return normalizeAnswer(given) !== '' && normalizeAnswer(given) === normalizeAnswer(expected);
+  }
+
   function createSupabaseClient() {
     const cfg = window.PUBQUIZ_CONFIG;
     return supabase.createClient(cfg.supabaseUrl, cfg.supabaseKey);
@@ -63,6 +74,8 @@
     channelName,
     normalizeCode,
     isValidCode,
+    normalizeAnswer,
+    answersMatch,
     createSupabaseClient,
     presenceMetas,
     findHost

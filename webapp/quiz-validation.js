@@ -1,5 +1,6 @@
 // Browser port of the quiz validation rules from menu.js (the Electron menu
 // controller) — keep the two in sync. Exposed as window.QuizValidation.
+// '.question' (single typed question) is web-only and has no Electron pendant.
 (function () {
   const QUIZ_TYPES = {
     '.topicquiz': 'Topic Quiz',
@@ -7,7 +8,8 @@
     '.sortquiz': 'Sort Quiz',
     '.imagequiz': 'Image Quiz',
     '.imagemutationquiz': 'Image Mutation Quiz',
-    '.title': 'Title'
+    '.title': 'Title',
+    '.question': 'Frage'
   };
 
   function getExtension(fileName) {
@@ -123,13 +125,27 @@
     return { isValid: true };
   }
 
+  function validateSingleQuestion(data) {
+    if (!data || typeof data !== 'object' || Array.isArray(data)) {
+      return { isValid: false, errors: ['Question quiz must be an object'] };
+    }
+    if (!data.question || typeof data.question !== 'string' || data.question.trim() === '') {
+      return { isValid: false, errors: ['Question quiz must have a non-empty question string'] };
+    }
+    if (!data.answer || typeof data.answer !== 'string' || data.answer.trim() === '') {
+      return { isValid: false, errors: ['Question quiz must have a non-empty answer string'] };
+    }
+    return { isValid: true };
+  }
+
   const VALIDATORS = {
     '.topicquiz': validateTopicQuiz,
     '.pairquiz': validatePairQuiz,
     '.sortquiz': validateSortQuiz,
     '.imagequiz': validateImageQuiz,
     '.imagemutationquiz': validateImageMutationQuiz,
-    '.title': validateTitleQuiz
+    '.title': validateTitleQuiz,
+    '.question': validateSingleQuestion
   };
 
   // Validates a single quiz file (name + raw text content).

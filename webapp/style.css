@@ -213,6 +213,66 @@ ul.list li .tag {
   }
 }
 
+.question-text {
+  font-size: 1.3rem;
+  color: var(--fg-bright);
+  border-left: 3px solid var(--fg);
+  padding: 0.5rem 0 0.5rem 0.8rem;
+  margin: 0.5rem 0 1rem;
+  text-align: left;
+}
+
+.question-answer {
+  font-size: 1.1rem;
+  color: var(--fg-bright);
+  margin: 0.5rem 0 1rem;
+}
+
+.own-result {
+  font-size: 1.8rem;
+  font-weight: bold;
+  letter-spacing: 0.1em;
+  margin: 1rem 0 0.5rem;
+}
+
+.result-correct {
+  color: var(--fg-bright);
+  text-shadow: 0 0 12px rgba(51, 255, 51, 0.6);
+}
+
+.result-wrong {
+  color: var(--error);
+  text-shadow: 0 0 12px rgba(255, 85, 85, 0.6);
+}
+
+ul.list li .tag-correct {
+  color: var(--fg-bright);
+}
+
+ul.list li .tag-wrong {
+  color: var(--error);
+}
+
+.play-button {
+  width: auto;
+  margin: 0 0.6rem 0 0;
+  padding: 0.1rem 0.6rem;
+  font-size: 0.85rem;
+}
+
+#question-view {
+  text-align: left;
+}
+
+#question-view h2 {
+  text-align: center;
+}
+
+#question-view .own-result,
+#question-view .question-answer {
+  text-align: center;
+}
+
 .file-row {
   display: flex;
   gap: 0.8rem;

@@ -2,8 +2,10 @@
 // watch players join. The host browser is the room authority — it answers
 // join requests and broadcasts the public room state (see room-protocol.js).
 
-const QUIZ_EXTENSIONS = ['.topicquiz', '.pairquiz', '.sortquiz', '.imagequiz', '.imagemutationquiz', '.title'];
+const QUIZ_EXTENSIONS = ['.topicquiz', '.pairquiz', '.sortquiz', '.imagequiz', '.imagemutationquiz', '.title', '.question'];
 const HOST_SESSION_KEY = 'pubquiz-host-room';
+// Quiz types the web app can already play.
+const PLAYABLE_EXTENSIONS = ['.question'];
 
 class HostController {
   constructor() {
@@ -14,6 +16,9 @@ class HostController {
     // name (lowercased) -> { name, playerId, connected }
     this.players = new Map();
     this.playlist = [];
+    // Active question: { quizIndex, phase: 'question'|'revealed',
+    //                    answers: Map(nameLower -> { name, answer }) }
+    this.game = null;
 
     this.createView = document.getElementById('create-view');
     this.roomView = document.getElementById('room-view');
@@ -28,6 +33,8 @@ class HostController {
     document.getElementById('open-file-button').addEventListener('click', () => this.fileInput.click());
     document.getElementById('open-folder-button').addEventListener('click', () => this.folderInput.click());
     document.getElementById('close-button').addEventListener('click', () => this.closeRoom());
+    document.getElementById('reveal-button').addEventListener('click', () => this.revealAnswer());
+    document.getElementById('end-question-button').addEventListener('click', () => this.endQuestion());
     this.fileInput.addEventListener('change', () => this.loadFiles(this.fileInput.files));
     this.folderInput.addEventListener('change', () => this.loadFiles(this.folderInput.files));
 
@@ -41,6 +48,13 @@ class HostController {
     try {
       const session = JSON.parse(stored);
       this.playlist = session.playlist || [];
+      if (session.game) {
+        this.game = {
+          quizIndex: session.game.quizIndex,
+          phase: session.game.phase,
+          answers: new Map((session.game.answers || []).map((a) => [a.name.toLowerCase(), a]))
+        };
+      }
       this.setStatus('Raum wird wiederhergestellt …');
       await this.openRoom(session.code, { allowExistingPlayers: true });
       this.showRoomView();
@@ -85,6 +99,7 @@ class HostController {
     });
 
     channel.on('broadcast', { event: 'join-request' }, ({ payload }) => this.handleJoinRequest(payload));
+    channel.on('broadcast', { event: 'answer-submit' }, ({ payload }) => this.handleAnswerSubmit(payload));
     channel.on('presence', { event: 'sync' }, () => this.syncPresence());
     channel.on('presence', { event: 'leave' }, () => this.syncPresence());
     channel.on('presence', { event: 'join' }, () => this.syncPresence());
@@ -155,6 +170,14 @@ class HostController {
       }
     }
 
+    // A rejoining player gets their already-typed answer back.
+    if (response.ok && this.game) {
+      const ownAnswer = this.game.answers.get(response.name.toLowerCase());
+      if (ownAnswer) {
+        response.yourAnswer = ownAnswer.answer;
+      }
+    }
+
     this.channel.send({
       type: 'broadcast',
       event: 'join-response',
@@ -189,8 +212,83 @@ class HostController {
     return {
       code: this.roomCode,
       players: [...this.players.values()].map((p) => ({ name: p.name, connected: p.connected })),
-      playlist: this.playlist.map((q) => ({ fileName: q.fileName, typeName: q.typeName }))
+      playlist: this.playlist.map((q) => ({ fileName: q.fileName, typeName: q.typeName, played: !!q.played })),
+      game: this.publicGameState()
     };
+  }
+
+  publicGameState() {
+    if (!this.game) return null;
+    const quiz = this.playlist[this.game.quizIndex];
+    const state = {
+      phase: this.game.phase,
+      question: quiz.quizData.question,
+      answered: [...this.game.answers.values()].map((a) => a.name)
+    };
+    if (this.game.phase === 'revealed') {
+      state.answer = quiz.quizData.answer;
+      state.results = this.buildResults();
+    }
+    return state;
+  }
+
+  buildResults() {
+    const quiz = this.playlist[this.game.quizIndex];
+    return [...this.players.values()].map((player) => {
+      const given = this.game.answers.get(player.name.toLowerCase());
+      return {
+        name: player.name,
+        answer: given ? given.answer : null,
+        correct: given ? RoomProtocol.answersMatch(given.answer, quiz.quizData.answer) : false
+      };
+    });
+  }
+
+  allConnectedAnswered() {
+    if (!this.game) return false;
+    const connected = [...this.players.values()].filter((p) => p.connected);
+    return connected.length > 0 &&
+      connected.every((p) => this.game.answers.has(p.name.toLowerCase()));
+  }
+
+  handleAnswerSubmit(payload) {
+    if (!this.game || this.game.phase !== 'question') return;
+    if (!payload || !payload.playerId) return;
+    const player = [...this.players.values()].find((p) => p.playerId === payload.playerId);
+    if (!player) return;
+    const answer = typeof payload.answer === 'string' ? payload.answer.trim() : '';
+    if (!answer) return;
+
+    this.game.answers.set(player.name.toLowerCase(), { name: player.name, answer });
+    this.persistSession();
+    this.renderRoom();
+    this.broadcastRoomState();
+  }
+
+  startQuestion(quizIndex) {
+    const quiz = this.playlist[quizIndex];
+    if (!quiz || quiz.extension !== '.question' || this.game) return;
+    this.game = { quizIndex, phase: 'question', answers: new Map() };
+    this.persistSession();
+    this.renderRoom();
+    this.broadcastRoomState();
+  }
+
+  revealAnswer() {
+    if (!this.game || this.game.phase !== 'question' || !this.allConnectedAnswered()) return;
+    this.game.phase = 'revealed';
+    this.persistSession();
+    this.renderRoom();
+    this.broadcastRoomState();
+  }
+
+  endQuestion() {
+    if (!this.game) return;
+    this.playlist[this.game.quizIndex].played = true;
+    this.game = null;
+    this.persistSession();
+    this.renderRoom();
+    this.broadcastRoomState();
   }
 
   broadcastRoomState() {
@@ -201,12 +299,23 @@ class HostController {
   persistSession() {
     sessionStorage.setItem(HOST_SESSION_KEY, JSON.stringify({
       code: this.roomCode,
-      playlist: this.playlist
+      playlist: this.playlist,
+      game: this.game
+        ? {
+            quizIndex: this.game.quizIndex,
+            phase: this.game.phase,
+            answers: [...this.game.answers.values()]
+          }
+        : null
     }));
   }
 
   async loadFiles(fileList) {
     this.loadError.textContent = '';
+    if (this.game) {
+      this.loadError.textContent = 'Bitte zuerst die aktive Frage beenden.';
+      return;
+    }
     const files = [...fileList].filter((file) => QuizValidation.isKnownQuizExtension(file.name));
 
     if (files.length === 0) {
@@ -259,6 +368,7 @@ class HostController {
     this.roomCode = null;
     this.players.clear();
     this.playlist = [];
+    this.game = null;
     this.roomView.classList.add('hidden');
     this.createView.classList.remove('hidden');
   }
@@ -278,16 +388,32 @@ class HostController {
 
     const playlistEl = document.getElementById('playlist');
     playlistEl.innerHTML = '';
-    for (const quiz of state.playlist) {
+    state.playlist.forEach((quiz, index) => {
       const li = document.createElement('li');
-      li.textContent = quiz.fileName;
+      if (quiz.played) li.classList.add('disconnected');
+
+      const playable = this.playlist[index] &&
+        PLAYABLE_EXTENSIONS.includes(this.playlist[index].extension);
+      if (playable) {
+        const play = document.createElement('button');
+        play.type = 'button';
+        play.className = 'play-button';
+        play.textContent = '▶';
+        play.disabled = !!this.game;
+        play.addEventListener('click', () => this.startQuestion(index));
+        li.appendChild(play);
+      }
+
+      li.appendChild(document.createTextNode(quiz.fileName));
       const tag = document.createElement('span');
       tag.className = 'tag';
-      tag.textContent = quiz.typeName;
+      tag.textContent = quiz.played ? `${quiz.typeName} · gespielt` : quiz.typeName;
       li.appendChild(tag);
       playlistEl.appendChild(li);
-    }
+    });
     document.getElementById('playlist-empty').classList.toggle('hidden', state.playlist.length > 0);
+
+    this.renderGame(state);
 
     const playerListEl = document.getElementById('player-list');
     playerListEl.innerHTML = '';
@@ -305,6 +431,61 @@ class HostController {
     }
     document.getElementById('player-count').textContent = state.players.length;
     document.getElementById('players-empty').classList.toggle('hidden', state.players.length > 0);
+  }
+
+  renderGame(state) {
+    const gameView = document.getElementById('game-view');
+    if (!state.game) {
+      gameView.classList.add('hidden');
+      return;
+    }
+    gameView.classList.remove('hidden');
+    document.getElementById('game-question').textContent = state.game.question;
+
+    const connected = state.players.filter((p) => p.connected);
+    const answeredSet = new Set(state.game.answered.map((n) => n.toLowerCase()));
+    document.getElementById('game-progress').textContent =
+      `${state.game.answered.length} von ${connected.length} verbundenen Spielern haben getippt`;
+
+    // Before the reveal only WHO answered is shown, never the answers —
+    // the host screen may be projected.
+    const statusEl = document.getElementById('answer-status');
+    statusEl.innerHTML = '';
+    for (const player of state.players) {
+      const li = document.createElement('li');
+      li.textContent = player.name;
+      if (!player.connected) li.classList.add('disconnected');
+      const tag = document.createElement('span');
+      tag.className = 'tag';
+      tag.textContent = answeredSet.has(player.name.toLowerCase())
+        ? 'getippt'
+        : (player.connected ? 'tippt …' : 'offline');
+      li.appendChild(tag);
+      statusEl.appendChild(li);
+    }
+
+    const revealButton = document.getElementById('reveal-button');
+    const resultsView = document.getElementById('game-results');
+    if (state.game.phase === 'revealed') {
+      revealButton.classList.add('hidden');
+      resultsView.classList.remove('hidden');
+      document.getElementById('game-answer').textContent = state.game.answer;
+      const resultsEl = document.getElementById('results-list');
+      resultsEl.innerHTML = '';
+      for (const result of state.game.results) {
+        const li = document.createElement('li');
+        li.textContent = `${result.name}: ${result.answer !== null ? result.answer : '– keine Antwort –'}`;
+        const tag = document.createElement('span');
+        tag.className = `tag ${result.correct ? 'tag-correct' : 'tag-wrong'}`;
+        tag.textContent = result.correct ? '✓ richtig' : '✗ falsch';
+        li.appendChild(tag);
+        resultsEl.appendChild(li);
+      }
+    } else {
+      revealButton.classList.remove('hidden');
+      revealButton.disabled = !this.allConnectedAnswered();
+      resultsView.classList.add('hidden');
+    }
   }
 
   setStatus(text) {

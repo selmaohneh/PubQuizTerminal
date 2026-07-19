@@ -20,10 +20,24 @@ class JoinController {
     this.waitingEl = document.getElementById('waiting');
     this.playerListEl = document.getElementById('player-list');
     this.statusLine = document.getElementById('status-line');
+    this.lobbyView = document.getElementById('lobby-view');
+    this.questionView = document.getElementById('question-view');
+    this.answerForm = document.getElementById('answer-form');
+    this.answerInput = document.getElementById('answer');
+    this.answerButton = document.getElementById('answer-button');
+    this.answerStatusLine = document.getElementById('answer-status-line');
+    this.resultView = document.getElementById('result-view');
+    this.currentGame = null;
+    this.prefilledAnswer = null;
 
     this.form.addEventListener('submit', (e) => {
       e.preventDefault();
       this.join(this.codeInput.value, this.nameInput.value);
+    });
+
+    this.answerForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      this.submitAnswer();
     });
 
     // Allow pre-filling the code via /?code=XXXX (e.g. from the host page URL).
@@ -150,7 +164,24 @@ class JoinController {
     this.form.classList.add('hidden');
     this.waitingEl.classList.remove('hidden');
     this.setStatus('verbunden');
+    this.prefilledAnswer = response.yourAnswer || null;
     this.renderRoom(response.room);
+  }
+
+  submitAnswer() {
+    if (!this.joined || !this.channel) return;
+    if (!this.currentGame || this.currentGame.phase !== 'question') return;
+    const answer = this.answerInput.value.trim();
+    if (!answer) {
+      this.answerStatusLine.textContent = 'Bitte eine Antwort eingeben.';
+      return;
+    }
+    this.channel.send({
+      type: 'broadcast',
+      event: 'answer-submit',
+      payload: { playerId: this.clientId, answer }
+    });
+    this.answerStatusLine.textContent = 'Antwort wird gespeichert …';
   }
 
   async leaveChannel() {
@@ -175,6 +206,79 @@ class JoinController {
         li.appendChild(tag);
       }
       this.playerListEl.appendChild(li);
+    }
+    this.renderGame(state.game || null);
+  }
+
+  renderGame(game) {
+    const isNewQuestion = !!game && (!this.currentGame || this.currentGame.question !== game.question);
+    const previousGame = this.currentGame;
+    this.currentGame = game;
+
+    if (!game) {
+      this.lobbyView.classList.remove('hidden');
+      this.questionView.classList.add('hidden');
+      if (previousGame) {
+        this.answerInput.value = '';
+        this.answerStatusLine.textContent = '';
+      }
+      return;
+    }
+
+    this.lobbyView.classList.add('hidden');
+    this.questionView.classList.remove('hidden');
+    document.getElementById('question-text').textContent = game.question;
+
+    if (isNewQuestion) {
+      // After a rejoin the host sends the already-typed answer back.
+      this.answerInput.value = this.prefilledAnswer || '';
+      this.prefilledAnswer = null;
+      this.answerStatusLine.textContent = '';
+    }
+
+    if (game.phase === 'revealed') {
+      this.answerForm.classList.add('hidden');
+      this.answerStatusLine.textContent = '';
+      this.resultView.classList.remove('hidden');
+      this.renderResults(game);
+      return;
+    }
+
+    this.resultView.classList.add('hidden');
+    this.answerForm.classList.remove('hidden');
+    const hasAnswered = game.answered
+      .some((n) => n.toLowerCase() === (this.name || '').toLowerCase());
+    if (hasAnswered) {
+      this.answerButton.textContent = 'Antwort ändern';
+      this.answerStatusLine.textContent = 'Antwort gespeichert – warte auf die anderen Spieler …';
+    } else {
+      this.answerButton.textContent = 'Antwort tippen';
+    }
+  }
+
+  renderResults(game) {
+    const own = (game.results || [])
+      .find((r) => r.name.toLowerCase() === (this.name || '').toLowerCase());
+    const ownResultEl = document.getElementById('own-result');
+    if (own && own.answer !== null) {
+      ownResultEl.textContent = own.correct ? '✓ RICHTIG!' : '✗ FALSCH';
+      ownResultEl.className = `own-result ${own.correct ? 'result-correct' : 'result-wrong'}`;
+    } else {
+      ownResultEl.textContent = 'Keine Antwort abgegeben';
+      ownResultEl.className = 'own-result';
+    }
+    document.getElementById('correct-answer').textContent = `Richtige Antwort: ${game.answer}`;
+
+    const resultsEl = document.getElementById('results-list');
+    resultsEl.innerHTML = '';
+    for (const result of game.results || []) {
+      const li = document.createElement('li');
+      li.textContent = `${result.name}: ${result.answer !== null ? result.answer : '– keine Antwort –'}`;
+      const tag = document.createElement('span');
+      tag.className = `tag ${result.correct ? 'tag-correct' : 'tag-wrong'}`;
+      tag.textContent = result.correct ? '✓' : '✗';
+      li.appendChild(tag);
+      resultsEl.appendChild(li);
     }
   }
 
