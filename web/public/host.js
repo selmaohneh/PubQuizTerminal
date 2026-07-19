@@ -1123,4 +1123,5 @@ class HostController {
   }
 }
 
-document.addEventListener('DOMContentLoaded', () => new HostController());
+// Instantiated by the Next.js page via ControllerBoot.
+window.HostController = HostController;

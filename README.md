@@ -33,12 +33,14 @@ The web mode turns every player's smartphone into a quiz terminal — over the i
 
 ### Hosting
 
-The app deploys to GitHub Pages automatically via `.github/workflows/deploy-pages.yml` on every push to `master` that touches `webapp/`. One-time setup: in the repository settings under **Pages**, set the source to **GitHub Actions**. The app is then live at `https://<user>.github.io/PubQuizTerminal/` (players) and `.../host.html` (quizmaster). Any other static host works too — just publish the `webapp/` folder.
+The web app is a Next.js app in `/web/` (App Router), hosted on Vercel. The Vercel project imports this GitHub repository with the **root directory set to `web`** — every push to `master` deploys automatically. The player join page is `/`, the quizmaster page is `/host`.
+
+The two pages are server-rendered JSX skeletons; the room and game logic lives in framework-free scripts under `web/public/` (loaded via the `ControllerBoot` component), so it stays shared with the integration tests.
 
 For local development:
 
 ```bash
-npm run web   # serves webapp/ on http://localhost:3000 (override with PORT)
+npm run web   # next dev on http://localhost:3000 (or: cd web && npm run dev)
 ```
 
 ### Quizmaster

@@ -4,7 +4,7 @@
   "description": "A terminal-based pub quiz application built with Electron",
   "main": "main.js",
   "scripts": {
-    "web": "node scripts/serve-webapp.js",
+    "web": "npm --prefix web run dev",
     "start": "electron . --no-sandbox",
     "dev": "electron . --dev --no-sandbox",
     "build": "electron-builder",
