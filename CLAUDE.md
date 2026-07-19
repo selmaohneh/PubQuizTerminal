@@ -22,7 +22,7 @@ npm run dist   # Create distributable packages
 
 **Web app (quiz rooms):**
 ```bash
-npm run web  # Next.js dev server on port 3000 (equivalent: cd web && npm run dev)
+npm run web  # Serve webapp/ locally on port 3000 (override with PORT env var)
 ```
 
 ## Architecture
@@ -30,19 +30,17 @@ npm run web  # Next.js dev server on port 3000 (equivalent: cd web && npm run de
 The repository contains two apps that share the same quiz file formats:
 
 1. **Electron app** (legacy, still functional): keyboard-driven single-screen quiz terminal
-2. **Web app** (`/web/`, Next.js on Vercel): quizmaster hosts a room with a random code, players join from their smartphones over the internet — this is the foundation the app is being rebuilt on
+2. **Web app** (`/webapp/`, fully static): quizmaster hosts a room with a random code, players join from their smartphones over the internet — this is the foundation the app is being rebuilt on
 
-### Web App (web/)
+### Web App (webapp/)
 
-Next.js app (App Router, own `web/package.json`), hosted on **Vercel** (project root directory `web`, auto-deploy on push to `master`). Routes: `/` = player join page (`web/app/page.js`), `/host` = quizmaster page (`web/app/host/page.js`). Both pages are JSX skeletons that render the DOM structure; the actual room/game logic lives in **framework-free scripts under `web/public/`** which are loaded sequentially and booted by `web/components/ControllerBoot.jsx` (`new window.JoinController()` / `new window.HostController()`). When changing page markup, keep the element ids in sync with the controllers.
+Rooms run over **Supabase Realtime** channels (project `myxtvqljoufgqgikcspm`, config in `webapp/config.js` — the publishable key is a public client key and safe to commit). There is no backend server; the quizmaster's browser is the room authority. Deployed to GitHub Pages via `.github/workflows/deploy-pages.yml` (push to `master` touching `webapp/`); local preview via `npm run web` (`scripts/serve-webapp.js`, maps `/` → `index.html`, `/host` → `host.html`).
 
-Rooms run over **Supabase Realtime** channels (project `myxtvqljoufgqgikcspm`, config in `web/public/config.js` — the publishable key is a public client key and safe to commit). There is no backend server; the quizmaster's browser is the room authority.
-
-- **web/public/room-protocol.js**: Shared protocol pieces (`window.RoomProtocol`): room-code generation (4 chars, ambiguous characters excluded), channel naming (`room-<CODE>`), presence helpers, answer matching, Supabase client factory.
-- **web/public/quiz-validation.js**: Browser port of the validation rules in `menu.js` — keep the two in sync (`window.QuizValidation`).
-- **web/public/host.js**: Quizmaster logic (`HostController`). Creates a room (subscribes to the channel, checks presence for a competing host, tracks `{role:'host'}`), answers `join-request` broadcasts, derives player connected-state from presence, loads a single quiz file or folder (via `webkitdirectory`, sorted alphabetically like Electron playlists), runs the game engines and broadcasts `room:update`. Room (code + playlist + game) is persisted in `sessionStorage`, so a reload reclaims the room and rebuilds players from presence.
-- **web/public/join.js**: Player logic (mobile-first, `JoinController`). Subscribes to the room channel, requires a host in presence (else "Raum nicht gefunden"), sends `join-request`, waits for the matching `join-response`, then tracks `{role:'player', playerId, name}`. Rejoins automatically after reload via `sessionStorage`; code can be pre-filled via `/?code=XXXX`.
-- **web/public/vendor/supabase.js**: Vendored supabase-js UMD bundle (copied from `node_modules/@supabase/supabase-js/dist/umd/supabase.js`).
+- **webapp/room-protocol.js**: Shared protocol pieces (`window.RoomProtocol`): room-code generation (4 chars, ambiguous characters excluded), channel naming (`room-<CODE>`), presence helpers, Supabase client factory.
+- **webapp/quiz-validation.js**: Browser port of the validation rules in `menu.js` — keep the two in sync (`window.QuizValidation`).
+- **webapp/host.html/js**: Quizmaster page (`HostController`). Creates a room (subscribes to the channel, checks presence for a competing host, tracks `{role:'host'}`), answers `join-request` broadcasts, derives player connected-state from presence, loads a single quiz file or folder (via `webkitdirectory`, sorted alphabetically like Electron playlists) and broadcasts `room:update`. Room (code + playlist) is persisted in `sessionStorage`, so a reload reclaims the room and rebuilds players from presence.
+- **webapp/index.html + join.js**: Player join page (mobile-first, `JoinController`). Subscribes to the room channel, requires a host in presence (else "Raum nicht gefunden"), sends `join-request`, waits for the matching `join-response`, then tracks `{role:'player', playerId, name}`. Rejoins automatically after reload via `sessionStorage`; code can be pre-filled via `/?code=XXXX`.
+- **webapp/vendor/supabase.js**: Vendored supabase-js UMD bundle (copied from `node_modules/@supabase/supabase-js/dist/umd/supabase.js`).
 
 Broadcast events: `join-request` (player→host), `join-response` (host→players, filtered by `playerId`), `answer-submit` (player→host), `room:update` (public room state incl. `game`), `room:closed`. Duplicate names are rejected while the name's holder is connected; a disconnected player may rejoin under the same name.
 

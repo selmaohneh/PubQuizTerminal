@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PubQuizTerminal – Quizmaster</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="terminal">
+    <h1>Quizmaster</h1>
+    <p class="subtitle">Raum erstellen, Quiz laden, Spieler empfangen.</p>
+
+    <div id="create-view">
+      <button id="create-button">Raum erstellen</button>
+      <p class="error" id="create-error"></p>
+    </div>
+
+    <div id="room-view" class="hidden">
+      <h2>Raum-Code</h2>
+      <div class="room-code" id="room-code"></div>
+
+      <h2>Beitreten unter</h2>
+      <p class="join-urls" id="join-urls"></p>
+
+      <div id="game-view" class="hidden">
+        <h2 id="game-title"></h2>
+
+        <div id="topic-select">
+          <p class="empty-hint">Thema auswählen:</p>
+          <div class="topic-grid" id="topic-grid"></div>
+        </div>
+
+        <div id="question-panel" class="hidden">
+          <p class="empty-hint" id="game-topic"></p>
+          <p class="question-text" id="game-question"></p>
+          <p class="empty-hint" id="game-progress"></p>
+          <ul class="list" id="answer-status"></ul>
+          <button type="button" id="reveal-button" disabled>Antwort freigeben</button>
+          <div id="game-results" class="hidden">
+            <h2>Auflösung</h2>
+            <p class="question-answer" id="game-answer"></p>
+            <ul class="list" id="results-list"></ul>
+          </div>
+          <button type="button" class="secondary" id="end-question-button">Zurück zur Themenwahl</button>
+        </div>
+
+        <div id="title-panel" class="hidden">
+          <div class="title-screen">
+            <p class="title-subtitle" id="title-subtitle-display"></p>
+            <p class="title-main" id="title-display"></p>
+          </div>
+        </div>
+
+        <div id="pair-panel" class="hidden">
+          <div id="pair-board">
+            <p class="empty-hint">Linkes Element wählen, dann das passende rechte Element.</p>
+            <div class="board-columns">
+              <div class="board-column" id="pair-left"></div>
+              <div class="board-column board-center" id="pair-center"></div>
+              <div class="board-column" id="pair-right"></div>
+            </div>
+          </div>
+          <div id="pair-result" class="hidden">
+            <p class="own-result" id="pair-result-verdict"></p>
+            <h2>Alle Paare</h2>
+            <ul class="list" id="pair-result-list"></ul>
+          </div>
+        </div>
+
+        <div id="sort-panel" class="hidden">
+          <div id="sort-board">
+            <p class="empty-hint">Element wählen, dann eine Position im Graphen anklicken.</p>
+            <div class="board-columns">
+              <div class="board-column" id="sort-left"></div>
+              <div class="board-column board-center" id="sort-center"></div>
+              <div class="board-column" id="sort-right"></div>
+            </div>
+          </div>
+          <div id="sort-result" class="hidden">
+            <p class="own-result" id="sort-result-verdict"></p>
+            <h2>Richtige Reihenfolge</h2>
+            <ul class="list" id="sort-result-list"></ul>
+          </div>
+        </div>
+
+        <div id="image-panel" class="hidden">
+          <p class="empty-hint" id="image-progress"></p>
+          <div class="image-display" id="image-display"></div>
+          <p class="question-answer hidden" id="image-answer"></p>
+          <button type="button" id="image-next-button">Weiter</button>
+        </div>
+
+        <button type="button" class="secondary" id="end-quiz-button">Quiz beenden</button>
+      </div>
+
+      <h2>Quiz laden</h2>
+      <p class="empty-hint">Einzelne Quiz-Datei (JSON) oder ganzen Ordner als Playlist.</p>
+      <input type="file" id="file-input" class="hidden"
+             accept=".topicquiz,.pairquiz,.sortquiz,.imagequiz,.imagemutationquiz,.title" multiple>
+      <input type="file" id="folder-input" class="hidden" webkitdirectory>
+      <div class="file-row">
+        <button type="button" class="secondary" id="open-file-button">Datei öffnen</button>
+        <button type="button" class="secondary" id="open-folder-button">Ordner öffnen</button>
+      </div>
+      <p class="error" id="load-error"></p>
+
+      <h2>Playlist</h2>
+      <ul class="list" id="playlist"></ul>
+      <p class="empty-hint" id="playlist-empty">Noch kein Quiz geladen.</p>
+
+      <h2>Spieler (<span id="player-count">0</span>)</h2>
+      <ul class="list" id="player-list"></ul>
+      <p class="empty-hint" id="players-empty">Noch keine Spieler verbunden<span class="blink">_</span></p>
+
+      <button type="button" class="secondary" id="close-button">Raum schließen</button>
+      <p class="status-line" id="status-line">bereit</p>
+    </div>
+  </div>
+
+  <script src="vendor/supabase.js"></script>
+  <script src="config.js"></script>
+  <script src="room-protocol.js"></script>
+  <script src="quiz-validation.js"></script>
+  <script src="host.js"></script>
+</body>
+</html>

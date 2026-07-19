@@ -509,5 +509,4 @@ class JoinController {
   }
 }
 
-// Instantiated by the Next.js page via ControllerBoot.
-window.JoinController = JoinController;
+document.addEventListener('DOMContentLoaded', () => new JoinController());

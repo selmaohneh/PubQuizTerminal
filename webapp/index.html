@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PubQuizTerminal – Beitreten</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="terminal">
+    <h1>PubQuizTerminal</h1>
+    <p class="subtitle">Dein Smartphone wird zum Quiz-Terminal.</p>
+
+    <form id="join-form">
+      <label for="code">Raum-Code</label>
+      <input type="text" id="code" class="code-input" maxlength="4" autocomplete="off"
+             autocapitalize="characters" spellcheck="false" placeholder="XXXX" required>
+
+      <label for="name">Dein Name</label>
+      <input type="text" id="name" maxlength="20" autocomplete="off" spellcheck="false"
+             placeholder="Name eingeben" required>
+
+      <button type="submit" id="join-button">Beitreten</button>
+      <p class="error" id="join-error"></p>
+    </form>
+
+    <div id="waiting" class="waiting-screen hidden">
+      <h2>Verbunden mit Raum <span id="joined-code"></span></h2>
+      <p class="player-name" id="joined-name"></p>
+
+      <div id="lobby-view">
+        <p>Warte auf den Quizmaster<span class="blink">_</span></p>
+        <h2>Spieler im Raum</h2>
+        <ul class="list" id="player-list"></ul>
+      </div>
+
+      <div id="topics-view" class="hidden">
+        <h2 id="topics-quiz-name"></h2>
+        <p>Der Quizmaster wählt ein Thema<span class="blink">_</span></p>
+        <ul class="list" id="topics-list"></ul>
+      </div>
+
+      <div id="question-view" class="hidden">
+        <h2 id="question-topic">Frage</h2>
+        <p class="question-text" id="question-text"></p>
+
+        <form id="answer-form">
+          <label for="answer">Deine Antwort</label>
+          <input type="text" id="answer" autocomplete="off" spellcheck="false"
+                 placeholder="Antwort eingeben">
+          <button type="submit" id="answer-button">Antwort tippen</button>
+        </form>
+        <p class="empty-hint" id="answer-status-line"></p>
+
+        <div id="result-view" class="hidden">
+          <p class="own-result" id="own-result"></p>
+          <p class="question-answer" id="correct-answer"></p>
+          <h2>Alle Antworten</h2>
+          <ul class="list" id="results-list"></ul>
+        </div>
+      </div>
+
+      <div id="title-view" class="hidden">
+        <div class="title-screen">
+          <p class="title-subtitle" id="title-subtitle"></p>
+          <p class="title-main" id="title-main"></p>
+        </div>
+      </div>
+
+      <div id="pair-view" class="hidden">
+        <h2 id="pair-quiz-name"></h2>
+        <div id="pair-mirror">
+          <p>Der Quizmaster ordnet zu<span class="blink">_</span></p>
+          <h2>Gefundene Paare</h2>
+          <ul class="list" id="pair-matched-list"></ul>
+          <div class="board-columns">
+            <div class="board-column" id="pair-mirror-left"></div>
+            <div class="board-column" id="pair-mirror-right"></div>
+          </div>
+        </div>
+        <div id="pair-mirror-result" class="hidden">
+          <p class="own-result" id="pair-mirror-verdict"></p>
+          <h2>Alle Paare</h2>
+          <ul class="list" id="pair-mirror-pairs"></ul>
+        </div>
+      </div>
+
+      <div id="sort-view" class="hidden">
+        <h2 id="sort-quiz-name"></h2>
+        <div id="sort-mirror">
+          <p>Der Quizmaster sortiert<span class="blink">_</span></p>
+          <div class="sort-mirror-graph" id="sort-mirror-graph"></div>
+          <h2>Noch einzusortieren</h2>
+          <ul class="list" id="sort-remaining-list"></ul>
+        </div>
+        <div id="sort-mirror-result" class="hidden">
+          <p class="own-result" id="sort-mirror-verdict"></p>
+          <h2>Richtige Reihenfolge</h2>
+          <ul class="list" id="sort-mirror-order"></ul>
+        </div>
+      </div>
+
+      <div id="image-view" class="hidden">
+        <h2 id="image-quiz-name"></h2>
+        <p class="empty-hint" id="image-mirror-progress"></p>
+        <div class="image-display" id="image-mirror-display"></div>
+        <p class="question-answer hidden" id="image-mirror-answer"></p>
+      </div>
+
+      <p class="status-line" id="status-line">verbunden</p>
+    </div>
+  </div>
+
+  <script src="vendor/supabase.js"></script>
+  <script src="config.js"></script>
+  <script src="room-protocol.js"></script>
+  <script src="join.js"></script>
+</body>
+</html>
