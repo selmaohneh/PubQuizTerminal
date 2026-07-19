@@ -47,9 +47,17 @@ npm run web   # serves webapp/ on http://localhost:3000 (override with PORT)
 2. Click **Raum erstellen** — a random 4-character room code is generated
 3. Load a single quiz file (**Datei öffnen**) or a whole folder as a playlist (**Ordner öffnen**), same file formats and validation as the Electron app
 4. Watch players join in real time
-5. Start a playable quiz from the playlist (▶). Currently playable in the web mode: **Topic Quiz** (`.topicquiz`)
+5. Start any quiz from the playlist (▶) — all quiz types are playable in the web mode. The quizmaster controls the game (by mouse/touch instead of arrow keys); the players' phones mirror the board live, so it also works fully remote.
 
-**Topic Quiz in web mode**: the quizmaster picks a topic from the 4x4 grid (just like in the Electron app — played topics are struck through). Every player then types an answer to the topic's question on their phone; answers can be changed until the reveal. The reveal button unlocks only once **all connected players** have typed; before the reveal the host screen only shows *who* has answered, never the answers (projector-safe). On reveal, everyone sees the correct answer, their own right/wrong verdict, and all answers (compared case-insensitively with normalized whitespace). After the last topic, the quiz is marked as played in the playlist.
+**Topic Quiz** (`.topicquiz`): the quizmaster picks a topic from the 4x4 grid (played topics are struck through). Every player then types an answer to the topic's question on their phone; answers can be changed until the reveal. The reveal button unlocks only once **all connected players** have typed; before the reveal the host screen only shows *who* has answered, never the answers (projector-safe). On reveal, everyone sees the correct answer, their own right/wrong verdict, and all answers (compared case-insensitively with normalized whitespace). After the last topic, the quiz is marked as played in the playlist.
+
+**Pair Quiz** (`.pairquiz`): the quizmaster clicks a left item, then the matching right item. Correct pairs move to the center; a wrong pair (or the extra item) ends the game — same rules as the Electron app. The result screen shows all correct pairs and highlights the extra item.
+
+**Sort Quiz** (`.sortquiz`): the quizmaster clicks an item, then a slot in the center graph. Items must be placed in the correct order; a wrong placement ends the game. The result screen shows the full correct order.
+
+**Image Quiz** (`.imagequiz`) / **Image Mutation Quiz** (`.imagemutationquiz`): the quizmaster steps through the images (question phase first, then the answers / originals). Images are resolved relative to the quiz file, so image quizzes must be loaded via **Ordner öffnen**; they are downscaled in the browser and streamed to the players' phones.
+
+**Title** (`.title`): shows the title screen to everyone; end it via "Quiz beenden".
 
 Reloading the page restores the room (same code, players stay in). Closing the room notifies all players.
 

@@ -45,6 +45,52 @@
           <button type="button" class="secondary" id="end-question-button">Zurück zur Themenwahl</button>
         </div>
 
+        <div id="title-panel" class="hidden">
+          <div class="title-screen">
+            <p class="title-subtitle" id="title-subtitle-display"></p>
+            <p class="title-main" id="title-display"></p>
+          </div>
+        </div>
+
+        <div id="pair-panel" class="hidden">
+          <div id="pair-board">
+            <p class="empty-hint">Linkes Element wählen, dann das passende rechte Element.</p>
+            <div class="board-columns">
+              <div class="board-column" id="pair-left"></div>
+              <div class="board-column board-center" id="pair-center"></div>
+              <div class="board-column" id="pair-right"></div>
+            </div>
+          </div>
+          <div id="pair-result" class="hidden">
+            <p class="own-result" id="pair-result-verdict"></p>
+            <h2>Alle Paare</h2>
+            <ul class="list" id="pair-result-list"></ul>
+          </div>
+        </div>
+
+        <div id="sort-panel" class="hidden">
+          <div id="sort-board">
+            <p class="empty-hint">Element wählen, dann eine Position im Graphen anklicken.</p>
+            <div class="board-columns">
+              <div class="board-column" id="sort-left"></div>
+              <div class="board-column board-center" id="sort-center"></div>
+              <div class="board-column" id="sort-right"></div>
+            </div>
+          </div>
+          <div id="sort-result" class="hidden">
+            <p class="own-result" id="sort-result-verdict"></p>
+            <h2>Richtige Reihenfolge</h2>
+            <ul class="list" id="sort-result-list"></ul>
+          </div>
+        </div>
+
+        <div id="image-panel" class="hidden">
+          <p class="empty-hint" id="image-progress"></p>
+          <div class="image-display" id="image-display"></div>
+          <p class="question-answer hidden" id="image-answer"></p>
+          <button type="button" id="image-next-button">Weiter</button>
+        </div>
+
         <button type="button" class="secondary" id="end-quiz-button">Quiz beenden</button>
       </div>
 

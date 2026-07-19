@@ -171,7 +171,7 @@ class JoinController {
 
   submitAnswer() {
     if (!this.joined || !this.channel) return;
-    if (!this.currentGame || this.currentGame.phase !== 'question') return;
+    if (!this.currentGame || this.currentGame.type !== 'topic' || this.currentGame.phase !== 'question') return;
     const answer = this.answerInput.value.trim();
     if (!answer) {
       this.answerStatusLine.textContent = 'Bitte eine Antwort eingeben.';
@@ -212,16 +212,16 @@ class JoinController {
   }
 
   renderGame(game) {
-    const inQuestion = !!game && (game.phase === 'question' || game.phase === 'revealed');
-    const isNewQuestion = inQuestion &&
-      (!this.currentGame || this.currentGame.question !== game.question);
     const previousGame = this.currentGame;
     this.currentGame = game;
 
+    const views = ['lobby-view', 'topics-view', 'question-view', 'title-view', 'pair-view', 'sort-view', 'image-view'];
+    for (const id of views) {
+      document.getElementById(id).classList.add('hidden');
+    }
+
     if (!game) {
       this.lobbyView.classList.remove('hidden');
-      this.topicsView.classList.add('hidden');
-      this.questionView.classList.add('hidden');
       if (previousGame) {
         this.answerInput.value = '';
         this.answerStatusLine.textContent = '';
@@ -229,11 +229,21 @@ class JoinController {
       return;
     }
 
-    this.lobbyView.classList.add('hidden');
+    switch (game.type) {
+      case 'topic': return this.renderTopicGame(game, previousGame);
+      case 'title': return this.renderTitleGame(game);
+      case 'pair': return this.renderPairGame(game);
+      case 'sort': return this.renderSortGame(game);
+      case 'image':
+      case 'imagemutation': return this.renderImageGame(game);
+      default:
+        this.lobbyView.classList.remove('hidden');
+    }
+  }
 
+  renderTopicGame(game, previousGame) {
     if (game.phase === 'topics') {
       this.topicsView.classList.remove('hidden');
-      this.questionView.classList.add('hidden');
       this.answerInput.value = '';
       this.answerStatusLine.textContent = '';
       document.getElementById('topics-quiz-name').textContent = game.quizName;
@@ -254,7 +264,8 @@ class JoinController {
       return;
     }
 
-    this.topicsView.classList.add('hidden');
+    const isNewQuestion = !previousGame || previousGame.type !== 'topic' ||
+      previousGame.question !== game.question;
     this.questionView.classList.remove('hidden');
     document.getElementById('question-topic').textContent = game.topicName || 'Frage';
     document.getElementById('question-text').textContent = game.question;
@@ -284,6 +295,164 @@ class JoinController {
     } else {
       this.answerButton.textContent = 'Antwort tippen';
     }
+  }
+
+  renderTitleGame(game) {
+    document.getElementById('title-view').classList.remove('hidden');
+    document.getElementById('title-subtitle').textContent = game.subtitle || '';
+    document.getElementById('title-main').textContent = game.title;
+  }
+
+  renderPairGame(game) {
+    document.getElementById('pair-view').classList.remove('hidden');
+    document.getElementById('pair-quiz-name').textContent = game.quizName;
+    const mirror = document.getElementById('pair-mirror');
+    const result = document.getElementById('pair-mirror-result');
+
+    if (game.phase === 'playing') {
+      mirror.classList.remove('hidden');
+      result.classList.add('hidden');
+
+      const matchedEl = document.getElementById('pair-matched-list');
+      matchedEl.innerHTML = '';
+      for (const pair of game.matched) {
+        const li = document.createElement('li');
+        li.textContent = `${pair.left} — ${pair.right}`;
+        matchedEl.appendChild(li);
+      }
+
+      const renderSide = (elId, entries, selectedIndex) => {
+        const col = document.getElementById(elId);
+        col.innerHTML = '';
+        entries.forEach((entry, index) => {
+          if (entry.matched) return;
+          const div = document.createElement('div');
+          div.className = 'board-item board-item-static';
+          if (index === selectedIndex) div.classList.add('board-item-selected');
+          div.textContent = entry.text;
+          col.appendChild(div);
+        });
+      };
+      renderSide('pair-mirror-left', game.left, game.selectedLeft);
+      renderSide('pair-mirror-right', game.right, -1);
+      return;
+    }
+
+    mirror.classList.add('hidden');
+    result.classList.remove('hidden');
+    const verdict = document.getElementById('pair-mirror-verdict');
+    verdict.textContent = game.success
+      ? '✓ Alle Paare gefunden!'
+      : `✗ Falsches Paar: ${game.failed.left} — ${game.failed.right}`;
+    verdict.className = `own-result ${game.success ? 'result-correct' : 'result-wrong'}`;
+    const list = document.getElementById('pair-mirror-pairs');
+    list.innerHTML = '';
+    for (const pair of game.pairs) {
+      const li = document.createElement('li');
+      li.textContent = `${pair.left} — ${pair.right}`;
+      list.appendChild(li);
+    }
+    for (const extra of game.extra) {
+      const li = document.createElement('li');
+      li.textContent = extra;
+      li.classList.add('extra-item-row');
+      const tag = document.createElement('span');
+      tag.className = 'tag tag-wrong';
+      tag.textContent = 'übrig';
+      li.appendChild(tag);
+      list.appendChild(li);
+    }
+  }
+
+  renderSortGame(game) {
+    document.getElementById('sort-view').classList.remove('hidden');
+    document.getElementById('sort-quiz-name').textContent = game.quizName;
+    const mirror = document.getElementById('sort-mirror');
+    const result = document.getElementById('sort-mirror-result');
+
+    if (game.phase === 'playing') {
+      mirror.classList.remove('hidden');
+      result.classList.add('hidden');
+
+      const graph = document.getElementById('sort-mirror-graph');
+      graph.innerHTML = '';
+      const upper = document.createElement('div');
+      upper.className = 'graph-label';
+      upper.textContent = `▲ ${game.upperLabel}`;
+      graph.appendChild(upper);
+      for (const text of game.placed) {
+        const div = document.createElement('div');
+        div.className = 'placed-item';
+        div.textContent = text;
+        graph.appendChild(div);
+      }
+      const lower = document.createElement('div');
+      lower.className = 'graph-label';
+      lower.textContent = `▼ ${game.lowerLabel}`;
+      graph.appendChild(lower);
+
+      const remainingEl = document.getElementById('sort-remaining-list');
+      remainingEl.innerHTML = '';
+      for (const entry of [...game.left, ...game.right]) {
+        if (entry.used) continue;
+        const li = document.createElement('li');
+        li.textContent = entry.text;
+        if (game.selectedText === entry.text) {
+          const tag = document.createElement('span');
+          tag.className = 'tag';
+          tag.textContent = 'ausgewählt';
+          li.appendChild(tag);
+        }
+        remainingEl.appendChild(li);
+      }
+      return;
+    }
+
+    mirror.classList.add('hidden');
+    result.classList.remove('hidden');
+    const verdict = document.getElementById('sort-mirror-verdict');
+    verdict.textContent = game.success
+      ? '✓ Alles richtig einsortiert!'
+      : `✗ Falsch platziert: ${game.failed.text}`;
+    verdict.className = `own-result ${game.success ? 'result-correct' : 'result-wrong'}`;
+    const list = document.getElementById('sort-mirror-order');
+    list.innerHTML = '';
+    const upperLi = document.createElement('li');
+    upperLi.textContent = `▲ ${game.upperLabel}`;
+    list.appendChild(upperLi);
+    for (const text of game.order) {
+      const li = document.createElement('li');
+      li.textContent = text;
+      list.appendChild(li);
+    }
+    const lowerLi = document.createElement('li');
+    lowerLi.textContent = `▼ ${game.lowerLabel}`;
+    list.appendChild(lowerLi);
+  }
+
+  renderImageGame(game) {
+    document.getElementById('image-view').classList.remove('hidden');
+    document.getElementById('image-quiz-name').textContent = game.quizName;
+    document.getElementById('image-mirror-progress').textContent =
+      `${game.phase === 'question' ? 'Bild' : 'Auflösung'} ${game.index + 1} von ${game.total}`;
+
+    const display = document.getElementById('image-mirror-display');
+    display.innerHTML = '';
+    const img = document.createElement('img');
+    img.src = game.image;
+    img.alt = 'Quiz-Bild';
+    display.appendChild(img);
+    if (game.type === 'imagemutation' && game.original) {
+      const img2 = document.createElement('img');
+      img2.src = game.original;
+      img2.alt = 'Original';
+      display.appendChild(img2);
+    }
+
+    const answerEl = document.getElementById('image-mirror-answer');
+    const showAnswer = game.type === 'image' && game.answer;
+    answerEl.textContent = showAnswer ? game.answer : '';
+    answerEl.classList.toggle('hidden', !showAnswer);
   }
 
   renderResults(game) {
