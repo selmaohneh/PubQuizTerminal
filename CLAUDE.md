@@ -20,7 +20,39 @@ npm run build  # Build for current platform
 npm run dist   # Create distributable packages
 ```
 
+**Web app (quiz rooms):**
+```bash
+npm run web  # Serve webapp/ locally on port 3000 (override with PORT env var)
+```
+
 ## Architecture
+
+The repository contains two apps that share the same quiz file formats:
+
+1. **Electron app** (legacy, still functional): keyboard-driven single-screen quiz terminal
+2. **Web app** (`/webapp/`, fully static): quizmaster hosts a room with a random code, players join from their smartphones over the internet — this is the foundation the app is being rebuilt on
+
+### Web App (webapp/)
+
+Rooms run over **Supabase Realtime** channels (project `myxtvqljoufgqgikcspm`, config in `webapp/config.js` — the publishable key is a public client key and safe to commit). There is no backend server; the quizmaster's browser is the room authority. Deployed to GitHub Pages via `.github/workflows/deploy-pages.yml` (push to `master` touching `webapp/`); local preview via `npm run web` (`scripts/serve-webapp.js`, maps `/` → `index.html`, `/host` → `host.html`).
+
+- **webapp/room-protocol.js**: Shared protocol pieces (`window.RoomProtocol`): room-code generation (4 chars, ambiguous characters excluded), channel naming (`room-<CODE>`), presence helpers, Supabase client factory.
+- **webapp/quiz-validation.js**: Browser port of the validation rules in `menu.js` — keep the two in sync (`window.QuizValidation`).
+- **webapp/host.html/js**: Quizmaster page (`HostController`). Creates a room (subscribes to the channel, checks presence for a competing host, tracks `{role:'host'}`), answers `join-request` broadcasts, derives player connected-state from presence, loads a single quiz file or folder (via `webkitdirectory`, sorted alphabetically like Electron playlists) and broadcasts `room:update`. Room (code + playlist) is persisted in `sessionStorage`, so a reload reclaims the room and rebuilds players from presence.
+- **webapp/index.html + join.js**: Player join page (mobile-first, `JoinController`). Subscribes to the room channel, requires a host in presence (else "Raum nicht gefunden"), sends `join-request`, waits for the matching `join-response`, then tracks `{role:'player', playerId, name}`. Rejoins automatically after reload via `sessionStorage`; code can be pre-filled via `/?code=XXXX`.
+- **webapp/vendor/supabase.js**: Vendored supabase-js UMD bundle (copied from `node_modules/@supabase/supabase-js/dist/umd/supabase.js`).
+
+Broadcast events: `join-request` (player→host), `join-response` (host→players, filtered by `playerId`), `answer-submit` (player→host), `room:update` (public room state incl. `game`), `room:closed`. Duplicate names are rejected while the name's holder is connected; a disconnected player may rejoin under the same name.
+
+**Gameplay**: All quiz types are playable (`PLAYABLE_EXTENSIONS` in `host.js`). Host starts a quiz from the playlist (▶); the game state machine lives in `HostController.game` (`{quizIndex, type, …}` — type-specific shape, see the `init*Game`/`start*` methods), is included in `room:update` as `game` (built by `publicGameState()`, dispatched on `game.type` in both `renderGame`s) and persisted in the host's `sessionStorage` (`serializeGame`/`deserializeGame`; persistence is best-effort — image-heavy playlists may exceed the quota, then only the room code is kept). `endQuiz()` marks the playlist entry `played` and returns everyone to the lobby. The host controls every game by click; players see live read-only mirrors.
+
+- **topic** (typed answers): phase `topics` — host sees the 4x4 grid (played topics struck through), players a read-only list. Host picks a topic → phase `question`: players type answers (`answer-submit`; resubmit until reveal; rejoining players get `yourAnswer` in the `join-response`). Reveal gated on every **connected** player having answered; pre-reveal the host UI shows only who answered (projector-safe). Results use `RoomProtocol.answersMatch` (case-insensitive, normalized whitespace). `backToTopics()` marks the topic played, auto-ends after the last one. `falseAnswers` are ignored (typed instead of multiple choice).
+- **pair**: Electron rules — shuffled left/right columns (extra item mixed into right), host clicks left then right; correct pairs move to the center, a wrong pair (or the extra item) ends the game; result shows all pairs + extra.
+- **sort**: Electron rules — starter item in the center graph (`starterItemIndex` honored), remaining items split left/right (5/rest), `sorted` alternates spots (null) and items and is rebuilt after each placement; placement correct iff original indices stay ascending; wrong placement ends the game; result shows the full order.
+- **image / imagemutation**: host steps through question phase then results phase (`imageNext()`, last click ends the quiz). Images are resolved relative to the quiz file at load time (`attachImages`/`findImageFile` — requires folder upload for relative paths, falls back to basename matching), downscaled to JPEG data URLs ≤ ~190KB (`imageFileToDataUrl`, keeps broadcasts under the Realtime payload limit) and stored on the quiz items (`imageData` / `mutatedImageData`+`originalImageData`). Only the currently shown image is broadcast.
+- **title**: shows title/subtitle to everyone until the host ends it.
+
+Room state lives only in the channel/browser while the room is open.
 
 ### Main Process (main.js)
 - Creates BrowserWindow with `nodeIntegration: true` and `contextIsolation: false`

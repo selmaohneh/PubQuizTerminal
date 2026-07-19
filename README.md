@@ -27,6 +27,50 @@ A terminal-based pub quiz application built with Electron. Features five differe
 npm start
 ```
 
+## Quiz Rooms (Web Mode)
+
+The web mode turns every player's smartphone into a quiz terminal — over the internet, no LAN required. The quizmaster creates a room with a random code, and players join by entering the code and a name. Rooms run over [Supabase Realtime](https://supabase.com/docs/guides/realtime) channels; the web app itself is fully static, so there is no server to operate.
+
+### Hosting
+
+The app deploys to GitHub Pages automatically via `.github/workflows/deploy-pages.yml` on every push to `master` that touches `webapp/`. One-time setup: in the repository settings under **Pages**, set the source to **GitHub Actions**. The app is then live at `https://<user>.github.io/PubQuizTerminal/` (players) and `.../host.html` (quizmaster). Any other static host works too — just publish the `webapp/` folder.
+
+For local development:
+
+```bash
+npm run web   # serves webapp/ on http://localhost:3000 (override with PORT)
+```
+
+### Quizmaster
+
+1. Open `host.html` in a browser
+2. Click **Raum erstellen** — a random 4-character room code is generated
+3. Load a single quiz file (**Datei öffnen**) or a whole folder as a playlist (**Ordner öffnen**), same file formats and validation as the Electron app
+4. Watch players join in real time
+5. Start any quiz from the playlist (▶) — all quiz types are playable in the web mode. The quizmaster controls the game (by mouse/touch instead of arrow keys); the players' phones mirror the board live, so it also works fully remote.
+
+**Topic Quiz** (`.topicquiz`): the quizmaster picks a topic from the 4x4 grid (played topics are struck through). Every player then types an answer to the topic's question on their phone; answers can be changed until the reveal. The reveal button unlocks only once **all connected players** have typed; before the reveal the host screen only shows *who* has answered, never the answers (projector-safe). On reveal, everyone sees the correct answer, their own right/wrong verdict, and all answers (compared case-insensitively with normalized whitespace). After the last topic, the quiz is marked as played in the playlist.
+
+**Pair Quiz** (`.pairquiz`): the quizmaster clicks a left item, then the matching right item. Correct pairs move to the center; a wrong pair (or the extra item) ends the game — same rules as the Electron app. The result screen shows all correct pairs and highlights the extra item.
+
+**Sort Quiz** (`.sortquiz`): the quizmaster clicks an item, then a slot in the center graph. Items must be placed in the correct order; a wrong placement ends the game. The result screen shows the full correct order.
+
+**Image Quiz** (`.imagequiz`) / **Image Mutation Quiz** (`.imagemutationquiz`): the quizmaster steps through the images (question phase first, then the answers / originals). Images are resolved relative to the quiz file, so image quizzes must be loaded via **Ordner öffnen**; they are downscaled in the browser and streamed to the players' phones.
+
+**Title** (`.title`): shows the title screen to everyone; end it via "Quiz beenden".
+
+Reloading the page restores the room (same code, players stay in). Closing the room notifies all players.
+
+### Players
+
+1. Open the join page on a smartphone (the room code can be pre-filled via `?code=XXXX` — the quizmaster page shows a ready-made link)
+2. Enter the room code and a name
+3. The phone shows the waiting screen until the quizmaster starts — if the connection drops, rejoining with the same name resumes the seat
+
+### How it works
+
+Each room is a Supabase Realtime channel (`room-<CODE>`). The quizmaster's browser is the authority: it answers join requests, tracks who is online via presence, and broadcasts the room state. No room data touches a database — everything lives in the channel while the room is open. The Supabase project URL and publishable key are configured in `webapp/config.js`.
+
 ## Usage
 
 ### Loading Quizzes
