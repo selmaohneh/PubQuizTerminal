@@ -47,7 +47,9 @@ npm run web   # serves webapp/ on http://localhost:3000 (override with PORT)
 2. Click **Raum erstellen** — a random 4-character room code is generated
 3. Load a single quiz file (**Datei öffnen**) or a whole folder as a playlist (**Ordner öffnen**), same file formats and validation as the Electron app
 4. Watch players join in real time
-5. Start a playable quiz from the playlist (▶). For `.question` quizzes: the reveal button unlocks once all connected players have typed; before the reveal the host screen only shows *who* has answered, never the answers (projector-safe)
+5. Start a playable quiz from the playlist (▶). Currently playable in the web mode: **Topic Quiz** (`.topicquiz`)
+
+**Topic Quiz in web mode**: the quizmaster picks a topic from the 4x4 grid (just like in the Electron app — played topics are struck through). Every player then types an answer to the topic's question on their phone; answers can be changed until the reveal. The reveal button unlocks only once **all connected players** have typed; before the reveal the host screen only shows *who* has answered, never the answers (projector-safe). On reveal, everyone sees the correct answer, their own right/wrong verdict, and all answers (compared case-insensitively with normalized whitespace). After the last topic, the quiz is marked as played in the playlist.
 
 Reloading the page restores the room (same code, players stay in). Closing the room notifies all players.
 
@@ -240,33 +242,6 @@ Display a title screen with optional subtitle. Useful for section dividers in pl
 **Rules**:
 - Title cannot be empty
 - Press Enter to proceed to next quiz in playlist
-
----
-
-### 6. Single Question (`.question`) — web only
-
-A single question that players answer by typing on their phones. Only playable in the web mode (quiz rooms), not in the Electron app.
-
-**Format**: Object with question and answer
-
-**JSON Template**:
-```json
-{
-  "question": "Wie heißt die Hauptstadt von Australien?",
-  "answer": "Canberra"
-}
-```
-
-**Fields**:
-- `question` (required): The question shown on every player's terminal
-- `answer` (required): The correct answer
-
-**Gameplay**:
-- The quizmaster starts the question from the playlist (▶)
-- Every player types an answer on their phone; answers can be changed until the reveal
-- The quizmaster can only reveal the answer once **all connected players** have typed
-- On reveal, everyone sees the correct answer, their own right/wrong verdict, and all answers
-- Answers are compared case-insensitively with trimmed/collapsed whitespace
 
 ---
 

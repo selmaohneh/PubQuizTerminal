@@ -24,23 +24,34 @@
       <p class="join-urls" id="join-urls"></p>
 
       <div id="game-view" class="hidden">
-        <h2>Aktive Frage</h2>
-        <p class="question-text" id="game-question"></p>
-        <p class="empty-hint" id="game-progress"></p>
-        <ul class="list" id="answer-status"></ul>
-        <button type="button" id="reveal-button" disabled>Antwort freigeben</button>
-        <div id="game-results" class="hidden">
-          <h2>Auflösung</h2>
-          <p class="question-answer" id="game-answer"></p>
-          <ul class="list" id="results-list"></ul>
+        <h2 id="game-title"></h2>
+
+        <div id="topic-select">
+          <p class="empty-hint">Thema auswählen:</p>
+          <div class="topic-grid" id="topic-grid"></div>
         </div>
-        <button type="button" class="secondary" id="end-question-button">Frage beenden</button>
+
+        <div id="question-panel" class="hidden">
+          <p class="empty-hint" id="game-topic"></p>
+          <p class="question-text" id="game-question"></p>
+          <p class="empty-hint" id="game-progress"></p>
+          <ul class="list" id="answer-status"></ul>
+          <button type="button" id="reveal-button" disabled>Antwort freigeben</button>
+          <div id="game-results" class="hidden">
+            <h2>Auflösung</h2>
+            <p class="question-answer" id="game-answer"></p>
+            <ul class="list" id="results-list"></ul>
+          </div>
+          <button type="button" class="secondary" id="end-question-button">Zurück zur Themenwahl</button>
+        </div>
+
+        <button type="button" class="secondary" id="end-quiz-button">Quiz beenden</button>
       </div>
 
       <h2>Quiz laden</h2>
       <p class="empty-hint">Einzelne Quiz-Datei (JSON) oder ganzen Ordner als Playlist.</p>
       <input type="file" id="file-input" class="hidden"
-             accept=".topicquiz,.pairquiz,.sortquiz,.imagequiz,.imagemutationquiz,.title,.question" multiple>
+             accept=".topicquiz,.pairquiz,.sortquiz,.imagequiz,.imagemutationquiz,.title" multiple>
       <input type="file" id="folder-input" class="hidden" webkitdirectory>
       <div class="file-row">
         <button type="button" class="secondary" id="open-file-button">Datei öffnen</button>

@@ -2,10 +2,10 @@
 // watch players join. The host browser is the room authority — it answers
 // join requests and broadcasts the public room state (see room-protocol.js).
 
-const QUIZ_EXTENSIONS = ['.topicquiz', '.pairquiz', '.sortquiz', '.imagequiz', '.imagemutationquiz', '.title', '.question'];
+const QUIZ_EXTENSIONS = ['.topicquiz', '.pairquiz', '.sortquiz', '.imagequiz', '.imagemutationquiz', '.title'];
 const HOST_SESSION_KEY = 'pubquiz-host-room';
 // Quiz types the web app can already play.
-const PLAYABLE_EXTENSIONS = ['.question'];
+const PLAYABLE_EXTENSIONS = ['.topicquiz'];
 
 class HostController {
   constructor() {
@@ -16,8 +16,9 @@ class HostController {
     // name (lowercased) -> { name, playerId, connected }
     this.players = new Map();
     this.playlist = [];
-    // Active question: { quizIndex, phase: 'question'|'revealed',
-    //                    answers: Map(nameLower -> { name, answer }) }
+    // Active topic quiz: { quizIndex, phase: 'topics'|'question'|'revealed',
+    //                      topicIndex: number|null, playedTopics: Set(index),
+    //                      answers: Map(nameLower -> { name, answer }) }
     this.game = null;
 
     this.createView = document.getElementById('create-view');
@@ -34,7 +35,8 @@ class HostController {
     document.getElementById('open-folder-button').addEventListener('click', () => this.folderInput.click());
     document.getElementById('close-button').addEventListener('click', () => this.closeRoom());
     document.getElementById('reveal-button').addEventListener('click', () => this.revealAnswer());
-    document.getElementById('end-question-button').addEventListener('click', () => this.endQuestion());
+    document.getElementById('end-question-button').addEventListener('click', () => this.backToTopics());
+    document.getElementById('end-quiz-button').addEventListener('click', () => this.endQuiz());
     this.fileInput.addEventListener('change', () => this.loadFiles(this.fileInput.files));
     this.folderInput.addEventListener('change', () => this.loadFiles(this.folderInput.files));
 
@@ -52,6 +54,8 @@ class HostController {
         this.game = {
           quizIndex: session.game.quizIndex,
           phase: session.game.phase,
+          topicIndex: session.game.topicIndex ?? null,
+          playedTopics: new Set(session.game.playedTopics || []),
           answers: new Map((session.game.answers || []).map((a) => [a.name.toLowerCase(), a]))
         };
       }
@@ -217,35 +221,49 @@ class HostController {
     };
   }
 
+  currentTopic() {
+    if (!this.game || this.game.topicIndex === null) return null;
+    return this.playlist[this.game.quizIndex].quizData[this.game.topicIndex];
+  }
+
   publicGameState() {
     if (!this.game) return null;
     const quiz = this.playlist[this.game.quizIndex];
     const state = {
       phase: this.game.phase,
-      question: quiz.quizData.question,
-      answered: [...this.game.answers.values()].map((a) => a.name)
+      quizName: quiz.fileName,
+      topics: quiz.quizData.map((topic, index) => ({
+        name: topic.name,
+        played: this.game.playedTopics.has(index)
+      }))
     };
+    if (this.game.phase === 'question' || this.game.phase === 'revealed') {
+      const topic = this.currentTopic();
+      state.topicName = topic.name;
+      state.question = topic.question;
+      state.answered = [...this.game.answers.values()].map((a) => a.name);
+    }
     if (this.game.phase === 'revealed') {
-      state.answer = quiz.quizData.answer;
+      state.answer = this.currentTopic().answer;
       state.results = this.buildResults();
     }
     return state;
   }
 
   buildResults() {
-    const quiz = this.playlist[this.game.quizIndex];
+    const topic = this.currentTopic();
     return [...this.players.values()].map((player) => {
       const given = this.game.answers.get(player.name.toLowerCase());
       return {
         name: player.name,
         answer: given ? given.answer : null,
-        correct: given ? RoomProtocol.answersMatch(given.answer, quiz.quizData.answer) : false
+        correct: given ? RoomProtocol.answersMatch(given.answer, topic.answer) : false
       };
     });
   }
 
   allConnectedAnswered() {
-    if (!this.game) return false;
+    if (!this.game || this.game.phase !== 'question') return false;
     const connected = [...this.players.values()].filter((p) => p.connected);
     return connected.length > 0 &&
       connected.every((p) => this.game.answers.has(p.name.toLowerCase()));
@@ -265,10 +283,26 @@ class HostController {
     this.broadcastRoomState();
   }
 
-  startQuestion(quizIndex) {
+  startQuiz(quizIndex) {
     const quiz = this.playlist[quizIndex];
-    if (!quiz || quiz.extension !== '.question' || this.game) return;
-    this.game = { quizIndex, phase: 'question', answers: new Map() };
+    if (!quiz || !PLAYABLE_EXTENSIONS.includes(quiz.extension) || this.game) return;
+    this.game = {
+      quizIndex,
+      phase: 'topics',
+      topicIndex: null,
+      playedTopics: new Set(),
+      answers: new Map()
+    };
+    this.persistSession();
+    this.renderRoom();
+    this.broadcastRoomState();
+  }
+
+  selectTopic(topicIndex) {
+    if (!this.game || this.game.phase !== 'topics' || this.game.playedTopics.has(topicIndex)) return;
+    this.game.phase = 'question';
+    this.game.topicIndex = topicIndex;
+    this.game.answers = new Map();
     this.persistSession();
     this.renderRoom();
     this.broadcastRoomState();
@@ -282,7 +316,24 @@ class HostController {
     this.broadcastRoomState();
   }
 
-  endQuestion() {
+  backToTopics() {
+    if (!this.game || this.game.topicIndex === null) return;
+    this.game.playedTopics.add(this.game.topicIndex);
+    this.game.topicIndex = null;
+    this.game.answers = new Map();
+
+    const totalTopics = this.playlist[this.game.quizIndex].quizData.length;
+    if (this.game.playedTopics.size >= totalTopics) {
+      this.endQuiz();
+      return;
+    }
+    this.game.phase = 'topics';
+    this.persistSession();
+    this.renderRoom();
+    this.broadcastRoomState();
+  }
+
+  endQuiz() {
     if (!this.game) return;
     this.playlist[this.game.quizIndex].played = true;
     this.game = null;
@@ -304,6 +355,8 @@ class HostController {
         ? {
             quizIndex: this.game.quizIndex,
             phase: this.game.phase,
+            topicIndex: this.game.topicIndex,
+            playedTopics: [...this.game.playedTopics],
             answers: [...this.game.answers.values()]
           }
         : null
@@ -400,7 +453,7 @@ class HostController {
         play.className = 'play-button';
         play.textContent = '▶';
         play.disabled = !!this.game;
-        play.addEventListener('click', () => this.startQuestion(index));
+        play.addEventListener('click', () => this.startQuiz(index));
         li.appendChild(play);
       }
 
@@ -440,6 +493,31 @@ class HostController {
       return;
     }
     gameView.classList.remove('hidden');
+    document.getElementById('game-title').textContent = state.game.quizName;
+
+    const topicSelect = document.getElementById('topic-select');
+    const questionPanel = document.getElementById('question-panel');
+
+    if (state.game.phase === 'topics') {
+      topicSelect.classList.remove('hidden');
+      questionPanel.classList.add('hidden');
+      const grid = document.getElementById('topic-grid');
+      grid.innerHTML = '';
+      state.game.topics.forEach((topic, index) => {
+        const cell = document.createElement('button');
+        cell.type = 'button';
+        cell.className = 'topic-cell';
+        cell.textContent = topic.name;
+        cell.disabled = topic.played;
+        cell.addEventListener('click', () => this.selectTopic(index));
+        grid.appendChild(cell);
+      });
+      return;
+    }
+
+    topicSelect.classList.add('hidden');
+    questionPanel.classList.remove('hidden');
+    document.getElementById('game-topic').textContent = `Thema: ${state.game.topicName}`;
     document.getElementById('game-question').textContent = state.game.question;
 
     const connected = state.players.filter((p) => p.connected);

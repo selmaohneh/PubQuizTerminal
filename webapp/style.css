@@ -253,6 +253,42 @@ ul.list li .tag-wrong {
   color: var(--error);
 }
 
+.topic-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+  margin: 0.8rem 0;
+}
+
+.topic-cell {
+  width: auto;
+  margin: 0;
+  padding: 0.8rem 0.4rem;
+  font-size: 0.85rem;
+  background: transparent;
+  color: var(--fg);
+  border: 1px solid var(--fg);
+  min-height: 4.5rem;
+  overflow-wrap: anywhere;
+}
+
+.topic-cell:hover:not(:disabled) {
+  background: rgba(51, 255, 51, 0.15);
+}
+
+.topic-cell:disabled {
+  background: transparent;
+  color: var(--fg-dim);
+  border-color: var(--fg-dim);
+  text-decoration: line-through;
+}
+
+@media (max-width: 480px) {
+  .topic-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 .play-button {
   width: auto;
   margin: 0 0.6rem 0 0;

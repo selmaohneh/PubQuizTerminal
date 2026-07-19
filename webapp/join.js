@@ -21,6 +21,7 @@ class JoinController {
     this.playerListEl = document.getElementById('player-list');
     this.statusLine = document.getElementById('status-line');
     this.lobbyView = document.getElementById('lobby-view');
+    this.topicsView = document.getElementById('topics-view');
     this.questionView = document.getElementById('question-view');
     this.answerForm = document.getElementById('answer-form');
     this.answerInput = document.getElementById('answer');
@@ -211,12 +212,15 @@ class JoinController {
   }
 
   renderGame(game) {
-    const isNewQuestion = !!game && (!this.currentGame || this.currentGame.question !== game.question);
+    const inQuestion = !!game && (game.phase === 'question' || game.phase === 'revealed');
+    const isNewQuestion = inQuestion &&
+      (!this.currentGame || this.currentGame.question !== game.question);
     const previousGame = this.currentGame;
     this.currentGame = game;
 
     if (!game) {
       this.lobbyView.classList.remove('hidden');
+      this.topicsView.classList.add('hidden');
       this.questionView.classList.add('hidden');
       if (previousGame) {
         this.answerInput.value = '';
@@ -226,7 +230,33 @@ class JoinController {
     }
 
     this.lobbyView.classList.add('hidden');
+
+    if (game.phase === 'topics') {
+      this.topicsView.classList.remove('hidden');
+      this.questionView.classList.add('hidden');
+      this.answerInput.value = '';
+      this.answerStatusLine.textContent = '';
+      document.getElementById('topics-quiz-name').textContent = game.quizName;
+      const topicsEl = document.getElementById('topics-list');
+      topicsEl.innerHTML = '';
+      for (const topic of game.topics || []) {
+        const li = document.createElement('li');
+        li.textContent = topic.name;
+        if (topic.played) {
+          li.classList.add('disconnected');
+          const tag = document.createElement('span');
+          tag.className = 'tag';
+          tag.textContent = 'gespielt';
+          li.appendChild(tag);
+        }
+        topicsEl.appendChild(li);
+      }
+      return;
+    }
+
+    this.topicsView.classList.add('hidden');
     this.questionView.classList.remove('hidden');
+    document.getElementById('question-topic').textContent = game.topicName || 'Frage';
     document.getElementById('question-text').textContent = game.question;
 
     if (isNewQuestion) {
